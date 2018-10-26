@@ -12,10 +12,6 @@ void kmain() {
 	gdt_init();
 	isr_install();
 	irq_install();
-	paging_init();
-	
-	//kprint(((char*)(0x1000))[0]);
-	//kprint("\n");
 	
     kprint("Connor's kernel\n"
         "Type END to halt the CPU\n> ");
