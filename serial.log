@@ -1,1 +1,28 @@
+======= MEMORY MAP =======
+Base addr: 00
+Length: 09FC00
+Type: FREE_MEMORY
+--------------------------
+Base addr: 9FC000
+Length: 0400
+Type: RESERVED
+--------------------------
+Base addr: F00000
+Length: 010000
+Type: RESERVED
+--------------------------
+Base addr: 1000000
+Length: 03FEE0000
+Type: FREE_MEMORY
+--------------------------
+Base addr: 3FFE00000
+Length: 020000
+Type: RESERVED
+--------------------------
+Base addr: FFFC00000
+Length: 040000
+Type: RESERVED
+--------------------------
+Available Memory (MB): 0x3FF
+==========================
 Kernel started.

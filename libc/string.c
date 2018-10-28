@@ -17,6 +17,17 @@ void int_to_ascii(int n, char str[]) {
     reverse(str);
 }
 
+void int_to_hex(int n, char str[]) {
+	int temp;
+	int i = 0;
+	
+	do {
+		str[i++] = (temp = n % 16) < 10 ? 48 + temp : 55 + temp;
+	} while((n /= 16) != 0);
+	
+	reverse(str);
+}
+
 /* K&R */
 void reverse(char s[]) {
     int c, i, j;

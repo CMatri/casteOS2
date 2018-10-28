@@ -5,8 +5,14 @@ FLAGS    equ  MBALIGN | MEMINFO ; this is the Multiboot 'flag' field
 MAGIC    equ  0x1BADB002        ; 'magic number' lets bootloader find the header
 CHECKSUM equ -(MAGIC + FLAGS)   ; checksum of above, to prove we are multiboot
 
+global KERNEL_VIRTUAL_BASE
 KERNEL_VIRTUAL_BASE equ 0xC0000000                  ; 3GB
 KERNEL_PAGE_NUMBER equ (KERNEL_VIRTUAL_BASE >> 22)  ; Page directory index of kernel's 4MB PTE.
+
+extern kernel_virtual_start
+extern kernel_virtual_end
+extern kernel_physical_start
+extern kernel_physical_end
 
 section .data
 align 0x1000
@@ -98,8 +104,14 @@ StartInHigherHalf:
 	; stack (as it grows downwards on x86 systems). This is necessarily done
 	; in assembly as languages such as C cannot function without a stack.
 	mov esp, stack_top
-	push eax
+	extern kmain
+
+	add ebx, KERNEL_VIRTUAL_BASE
 	push ebx
+	;push kernel_physical_end
+	;push kernel_physical_start
+	;push kernel_virtual_end
+	;push kernel_virtual_start
  
 	; This is a good place to initialize crucial processor state before the
 	; high-level kernel is entered. It's best to minimize the early
@@ -118,7 +130,6 @@ StartInHigherHalf:
 	; preserved and the call is well defined.
         ; note, that if you are building on Windows, C functions may have "_" prefix in assembly: _kernel_main
 	
-	extern kmain
 	call kmain
  
 	; If the system has nothing more to do, put the computer into an

@@ -18,7 +18,7 @@ int get_offset_col(int offset);
  * Print a message on the specified location
  * If col, row, are negative, we will use the current offset
  */
-void kprint_at(char *message, int col, int row) {
+void kprint_at_color(char *message, int col, int row, int color) {
     /* Set cursor if col/row are negative */
     int offset;
     if (col >= 0 && row >= 0)
@@ -32,11 +32,45 @@ void kprint_at(char *message, int col, int row) {
     /* Loop through message and print it */
     int i = 0;
     while (message[i] != 0) {
-        offset = print_char(message[i++], col, row, WHITE_ON_BLACK);
+        offset = print_char(message[i++], col, row, color);
         /* Compute row/col for next iteration */
         row = get_offset_row(offset);
         col = get_offset_col(offset);
     }
+}
+
+void kprint_at(char *message, int col, int row) { kprint_at_color(message, col, row, WHITE_ON_BLACK); }
+
+void khex(uint32_t n) {
+	kprint_base(n, 16, 0);
+}
+
+void kdec(uint32_t n) {
+	kprint_base(n, 10, 0);
+}
+
+void klhex(uint32_t n) {
+	kprint_base(n, 16, 1);
+}
+
+void kldec(uint32_t n) {	
+	kprint_base(n, 10, 1);
+}
+
+void kprint_base(uint32_t n, int b, int log) {
+	uint32_t baseNum;
+
+	if(n > (b - 1)) {
+		kprint_base(n / b, b, log);
+		baseNum = n % b;
+	} else baseNum = n;
+
+	
+	// Capital letters start at 65 but we have to
+	// subtract 10 to get the offset
+	if(baseNum > 9) { if(!log) print_char(baseNum + 65 - 10, -1, -1, WHITE_ON_BLACK); else klog_byte(baseNum + 65 - 10); }
+	else { if(!log) print_char(baseNum + 0x30, -1, -1, WHITE_ON_BLACK); else klog_byte(baseNum + 0x30); }
+	// Numbers start at 0x30 in ASCII
 }
 
 void kprint(char *message) {
@@ -48,6 +82,10 @@ void kprint_backspace() {
     int row = get_offset_row(offset);
     int col = get_offset_col(offset);
     print_char(0x08, col, row, WHITE_ON_BLACK);
+}
+
+void kpanic(char *message) {
+	kprint_at_color(message, -1, -1, RED_ON_BLACK);
 }
 
 /**********************************************************

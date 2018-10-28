@@ -20,7 +20,7 @@ myos.iso: kernel.bin
 	grub-mkrescue -o myos.iso isodir
 
 run: myos.iso
-	qemu-system-i386 -cdrom myos.iso -serial file:serial.log -m 4G
+	qemu-system-i386 -cdrom myos.iso -serial file:serial.log -m 1G
 	echo "Log: \n" && cat serial.log
 
 runbin: kernel.bin

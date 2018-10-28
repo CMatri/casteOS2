@@ -1,159 +1,88 @@
-/*
- * This file is part of NativeOS
- * Copyright (C) 2015-2018 The NativeOS contributors
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+#ifndef MULTIBOOT_H
+#define MULTIBOOT_H
 
-#ifndef KERNEL_MULTIBOOT_H_
-#define KERNEL_MULTIBOOT_H_
+#include <stdint.h>
 
-/* This structure is used for getting information about a module. */
-typedef struct multiboot_module {
-	/* Mod starting and ending address. */
-	unsigned int mod_start;
-	unsigned int mod_end;
+#define MULTIBOOT_KERNEL_MAGIC      0x2BADB002
+#define MULTIBOOT_HEADER_MAGIC      0x1BADB002
 
-	/* String (usually command line). */
-	unsigned int string;
+#define MULTIBOOT_MMAP_FREE_MEMORY  1
+#define MULTIBOOT_MMAP_RESERVED     2
+#define MULTIBOOT_MMAP_ACPI         3
+#define MULTIBOOT_MMAP_HIBERNATION  4
+#define MULTIBOOT_MMAP_BAD_CELL     5
 
-	/* Reserved (must be zero ATM) */
-	unsigned int reserved;
-} __attribute__((packed)) multiboot_module_t;
+const char* MULTIBOOT_MMAP_TYPES[];
 
-/*
- * This structure has information about the symbol table on A.OUT kernels.
- * Probably won't ever be supported since NativeOS is an ELF kernel, but
- * it's good to know.
- */
-typedef struct multiboot_aout {
-	unsigned int tabsize; /* Size of the nlist array table. */
-	unsigned int strsize; /* Size of the string array table. */
-	unsigned int addr; /* Physical address of the A.OUT symbol table. */
-	unsigned int reserved; /* Must be zeros. */
-} __attribute__((packed)) multiboot_aout_t;
+struct multiboot_header {
+  uint32_t flags;
+   uint32_t mem_lower;
+   uint32_t mem_upper;
+   uint32_t boot_device;
+   uint32_t cmdline;
+   uint32_t mods_count;
+   uint32_t mods_addr;
+   uint32_t num;
+   uint32_t size;
+   uint32_t addr;
+   uint32_t shndx;
+   uint32_t mmap_length;
+   uint32_t mmap_addr;
+   uint32_t drives_length;
+   uint32_t drives_addr;
+   uint32_t config_table;
+   uint32_t boot_loader_name;
+   uint32_t apm_table;
+   uint32_t vbe_control_info;
+   uint32_t vbe_mode_info;
+   uint32_t vbe_mode;
+   uint32_t vbe_interface_seg;
+   uint32_t vbe_interface_off;
+   uint32_t vbe_interface_len;
+} __attribute__ ((packed));
 
-/*
- * This structure has information aobut the section header on ELF kernels.
- * Again, I don't expect to have to traverse this structure, but it's good
- * to have.
- */
-typedef struct multiboot_elf {
-	unsigned int num; /* How many entries are there in the header. */
-	unsigned int size; /* The size of every entry in the header. */
-	unsigned int addr; /* Where is the section header structure. */
-	unsigned int shndx; /* String table used as the index of names. */
-} __attribute__((packed))  multiboot_elf_t;
+typedef struct {
+   uint16_t attributes;
+   uint8_t  winA, winB;
+   uint16_t granularity;
+   uint16_t winsize;
+   uint16_t segmentA, segmentB;
+   uint32_t realFctPtr;
+   uint16_t pitch;
 
-/*
- * Information about the computer memory map. The actual memory map could be
- * split in multiple blocks (maybe an empty slot in the computer or some
- * memory reserved for any other thing inside the computer...)
- */
-typedef struct multiboot_mmap {
-	unsigned int size; /* Size of the structure. */
-	unsigned long long base_addr; /* Starting address of the memory block. */
-	unsigned long long length; /* Size of the memory block in bytes. */
-	unsigned int type; /* Which kind of memory block is this. (1 == RAM) */
-} __attribute__((packed)) multiboot_mmap_t;
+   uint16_t Xres, Yres;
+   uint8_t  Wchar, Ychar, planes, bpp, banks;
+   uint8_t  memory_model, bank_size, image_pages;
+   uint8_t  reserved0;
 
-/* Information about the drives that are accessible on the computer. */
-typedef struct multiboot_drive {
-	unsigned int size; /* Size of the structure (might vary!) */
-	unsigned char drive_number; /* Drive number as declared by BIOS. */
-	unsigned char drive_mode; /* What kind of access mode the device has. */
-	unsigned char drive_cylinders; /* How many cylinders the device has. */
-	unsigned short drive_heads; /* How many heads the device has. */
-	unsigned char drive_sectors; /* How many sectores the device has. */
-	unsigned short *drive_ports; /* Drive ports array (ends with 00) */
-} __attribute__((packed)) multiboot_drive_t;
+   uint8_t  red_mask, red_position;
+   uint8_t  green_mask, green_position;
+   uint8_t  blue_mask, blue_position;
+   uint8_t  rsv_mask, rsv_position;
+   uint8_t  directcolor_attributes;
 
-#define MULTIBOOT_DRIVE_CHS 0 /* The device uses CHS addressing. */
-#define MULTIBOOT_DRIVE_LBA 1 /* The device uses LBA addressing. */
+   uint32_t physbase;
+   uint32_t reserved1;
+   uint16_t reserved2;
+} __attribute__ ((packed)) vbe_info_t;
 
-/*
- * Advanced Power Management (APM) table. See the specs at the Microsoft site
- * or maybe at https://en.wikipedia.org/wiki/Advanced_Power_Management
- */
-typedef struct multiboot_apm_table {
-	unsigned short version; /* Version number. */
-	unsigned short cseg; /* Protected mode 32 bit code segment. */
-	unsigned short offset; /* Offset of entry point. */
-	unsigned short cseg_16; /* Protected mode 16 bit code segment. */
-	unsigned short dseg; /* Protected mode 16 bit data segment. */
-	unsigned short flags; /* Flags. */
-	unsigned short cseg_len; /* Length of protected mode 32 bit CS. */
-	unsigned short cseg_16_len; /* Length of protected mode 16 bit CS. */
-	unsigned short dseg_len; /* Length of protected mode 16 bit DS. */
-} __attribute__((packed)) multiboot_apm_table_t;
+typedef struct {
+   uint32_t size;
+   uint32_t base_addr_low;
+   uint32_t base_addr_high;
+   //uint32_t length_low;
+   //uint32_t length_high;
+   uint64_t length;
+	uint32_t type;
+} __attribute__ ((packed)) mboot_memmap_t;
 
-/*
- * This is the actual multiboot structure that the boot loader gives my OS
- * when it loads and gives control to my kernel code. I can use this structure
- * to get information about the loader or the computer.
- */
-typedef struct multiboot_info {
-	/* Which features are supported by the OS loader (and version). */
-	unsigned int flags;
+typedef struct {
+	mboot_memmap_t* entries;
+	uint32_t length;
+	uint32_t total_memory_mb;
+} mmap_data_t;
 
-	/* Attributes related to memory lower and upper bounds (flag 0) */
-	unsigned int mem_lower;
-	unsigned int mem_upper;
+void load_mmap(struct multiboot_header *mbt);
+void print_mmap();
 
-	/* Attributes related to boot device (flag 1) */
-	unsigned int boot_device;
-
-	/* Attributes related to command line (flag 2) */
-	unsigned int command_line;
-
-	/* Attributes related to modules (flag 3) */
-	unsigned int mods_count;
-	unsigned int mods_addr;
-
-	/* Attributes related to the symbols (flags 4 or 5, but not both). */
-	union {
-		/* If flag 4 is ON, it is an A.OUT kernel. */
-		multiboot_aout_t aout;
-
-		/* Buf if flag 5 is ON, it is an ELF kernel. */
-		multiboot_elf_t elf;
-	} aout_elf;
-
-	/* Attributes related to memory map (flag 6). */
-	unsigned int mmap_length;
-	unsigned int mmap_addr;
-
-	/* Attirbutes related to the drives (flag 7). */
-	unsigned int drives_length;
-	unsigned int drives_addr;
-
-	/* Attributes related to the config table (flag 8). */
-	unsigned int config_table;
-
-	/* Attributes related to the boot laoder name (flag 9). */
-	unsigned int boot_loader_name;
-
-	/* Attributes related to the APM table (flag 10). */
-	unsigned int apm_table;
-
-	/* Attributes related to VBE data (if requested by the OS, flag 11). */
-	unsigned int vbe_control_info;
-	unsigned int vbe_mode_info;
-	unsigned short vbe_mode;
-	unsigned short vbe_interface_segment;
-	unsigned short vbe_interface_offset;
-	unsigned short vbe_interface_length;
-} __attribute__((packed)) multiboot_info_t;
-
-#endif // KERNEL_MULTIBOOT_H_
+#endif
