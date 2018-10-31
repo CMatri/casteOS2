@@ -12,7 +12,7 @@
 #define MULTIBOOT_MMAP_HIBERNATION  4
 #define MULTIBOOT_MMAP_BAD_CELL     5
 
-const char* MULTIBOOT_MMAP_TYPES[];
+char* MULTIBOOT_MMAP_TYPES[6];
 
 struct multiboot_header {
   uint32_t flags;
@@ -79,7 +79,7 @@ typedef struct {
 typedef struct {
 	mboot_memmap_t* entries;
 	uint32_t length;
-	uint32_t total_memory_mb;
+	uint32_t total_memory;
 } mmap_data_t;
 
 void load_mmap(struct multiboot_header *mbt);

@@ -16,6 +16,7 @@ extern kernel_physical_end
 
 section .data
 align 0x1000
+global BootPageDirectory
 BootPageDirectory:
     ; This page directory entry identity-maps the first 4MB of the 32-bit physical address space.
     ; All bits are clear except the following:
@@ -55,7 +56,7 @@ align 4
 section .bss
 align 16
 stack_bottom:
-resb 16384 ; 16 KiB
+resb 104856 ; 1 MB
 stack_top:
 ; The linker script specifies _start as the entry point to the kernel and the
 ; bootloader will jump to this position once the kernel has been loaded. It

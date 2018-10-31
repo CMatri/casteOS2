@@ -117,20 +117,18 @@ char *exception_messages[] = {
     "Reserved"
 };
 
-void page_fault_handler(registers_t *r) {
-	kprint("PAGE FAULT\n");
-}
-
 void isr_handler(registers_t *r) {
-    if(r->int_no == 14) page_fault_handler(r);
-	else {
+	if (interrupt_handlers[r->int_no] != 0) {
+        isr_t handler = interrupt_handlers[r->int_no];
+        handler(r);
+    } else {
 		kprint("received interrupt: ");
 		char s[3];
 		int_to_ascii(r->int_no, s);
 		kprint(s);
 		kprint("\n");
 		kprint(exception_messages[r->int_no]);
-		kprint("\n");	
+		kprint("\n");
 	}
 }
 
@@ -152,8 +150,6 @@ void irq_handler(registers_t *r) {
 }
 
 void irq_install() {
-    /* Enable interruptions */
-    asm volatile("sti");
     /* IRQ0: timer */
     init_timer(50);
     /* IRQ1: keyboard */

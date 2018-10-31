@@ -16,9 +16,10 @@ void kmain(uint32_t ebx) {
 	gdt_init();
 	isr_install();
 	irq_install();
-	pmm_init(mmap.total_memory_mb); // +1 because mmap.total_memory_mb is 1023 if 1G is dedicated. pmm_init requires a multiple of 4096.
-	
-    kprint("Connor's kernel\n"
+	pmm_init(mmap.total_memory); // mmap.total_memory is total size in bytes but I'll stick with 64mb for now.
+	paging_init();
+
+	kprint("Connor's kernel\n"
         "Type END to halt the CPU\n> ");
 	klog("Kernel started.\n");
 	

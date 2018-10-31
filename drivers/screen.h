@@ -20,10 +20,11 @@ void khex(uint32_t n);
 void kdec(uint32_t n);
 void klhex(uint32_t n);
 void kldec(uint32_t n);
-void kprint_base(uint32_t n, int b, int log);
+void kprint_base(uint32_t n, uint32_t b, int log);
 void kprint_at_color(char *message, int col, int row, int color);
 void kprint_at(char *message, int col, int row);
 void kprint(char *message);
 void kprint_backspace();
+void kpanic(char *message);
 
 #endif

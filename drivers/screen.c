@@ -1,4 +1,5 @@
 #include "screen.h"
+#include "logger.h"
 #include "../cpu/ports.h"
 #include "../libc/mem.h"
 
@@ -57,7 +58,7 @@ void kldec(uint32_t n) {
 	kprint_base(n, 10, 1);
 }
 
-void kprint_base(uint32_t n, int b, int log) {
+void kprint_base(uint32_t n, uint32_t b, int log) {
 	uint32_t baseNum;
 
 	if(n > (b - 1)) {
@@ -86,6 +87,7 @@ void kprint_backspace() {
 
 void kpanic(char *message) {
 	kprint_at_color(message, -1, -1, RED_ON_BLACK);
+	asm("hlt");
 }
 
 /**********************************************************

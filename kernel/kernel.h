@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include "../cpu/multiboot.h"
 
-#define BLOCK_SIZE 4096
+#define BASE_VIRTUAL 0xC0000000
 
 extern uint32_t KERNEL_VIRTUAL_BASE;
 extern uint32_t kernel_virtual_end;

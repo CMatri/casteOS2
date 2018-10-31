@@ -1,27 +1,26 @@
 #include "multiboot.h"
 #include "../libc/mem.h"
 #include "../drivers/screen.h"
+#include "../drivers/logger.h"
 #include "../kernel/kernel.h"
 
-const char* MULTIBOOT_MMAP_TYPES[] = { "", "FREE_MEMORY", "RESERVED", "ACPI", "HIBERNATION", "BAD_CELL" };
-
+char* MULTIBOOT_MMAP_TYPES[] = { "", "FREE_MEMORY", "RESERVED", "ACPI", "HIBERNATION", "BAD_CELL" };
 
 void load_mmap(struct multiboot_header *mbt) {
 	mmap.entries = (mboot_memmap_t*) (&kernel_virtual_end);
   	mmap.length = mbt->mmap_length / sizeof(mboot_memmap_t);
-	memory_copy((char*)(mbt->mmap_addr + 0xC0000000), (char*)mmap.entries, mbt->mmap_length);
+	memory_copy((uint8_t*)(mbt->mmap_addr + (uint32_t) &KERNEL_VIRTUAL_BASE), (uint8_t*)mmap.entries, mbt->mmap_length);
 	
-	int i;
+	uint32_t i;
 	uint64_t size = 0;
 	for(i = 0; i < mmap.length; i++) size += mmap.entries[i].length;
-	size /= 1024 * 1024; // Convert to MB
-	mmap.total_memory_mb = (uint32_t) size;
+	mmap.total_memory = (uint32_t) size;
 }
 
 void print_mmap() {
 	klog("======= MEMORY MAP =======\n");
 	
-	int i;
+	uint32_t i;
 	for(i = 0; i < mmap.length; i++) {
 		mboot_memmap_t m = mmap.entries[i];
 		klog("Base addr: ");
@@ -35,10 +34,10 @@ void print_mmap() {
 		klog("\n--------------------------\n");
 	}
 	
-	kprint("Available Memory (MB): 0x");
-	klog("Available Memory (MB): 0x");
-	khex(mmap.total_memory_mb);
-	klhex(mmap.total_memory_mb);
+	kprint("Available Memory: 0x");
+	klog("Available Memory: 0x");
+	khex(mmap.total_memory);
+	klhex(mmap.total_memory);
 	klog("\n==========================\n");
 	kprint("\n");
 }

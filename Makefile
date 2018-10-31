@@ -20,16 +20,16 @@ myos.iso: kernel.bin
 	grub-mkrescue -o myos.iso isodir
 
 run: myos.iso
-	qemu-system-i386 -cdrom myos.iso -serial file:serial.log -m 1G
+	qemu-system-i386 -cdrom myos.iso -serial file:serial.log -m 2G
 	echo "Log: \n" && cat serial.log
 
 runbin: kernel.bin
-	qemu-system-i386 -kernel kernel.bin
+	qemu-system-i386 -kernel kernel.bin -serial file:serial.log -m 2G
 
 # Open the connection to qemu and load our kernel-object file with symbols
 debug: kernel.bin kernel.elf
-	qemu-system-i386 -s -cdrom myos.iso -d guest_errors,int #&
-	#${GDB} -ex "target remote localhost:1234" -ex "symbol-file /home/matri/Programming/OSgrub/kernel.elf"
+	qemu-system-i386 -s -cdrom myos.iso -serial file:serial.log -m 2G &
+	${GDB} -ex "target remote localhost:1234" -ex "symbol-file /home/matri/Programming/OSgrub/kernel.elf" -ex "set print pretty on" -ex "hb bpointdebug"
 
 # Generic rules for wildcards
 # To make an object, always compile from its .c
