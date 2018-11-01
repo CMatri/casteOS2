@@ -11,6 +11,7 @@
 #define ISSET(i) ((bitmap[i / BITSIZE] >> (i % BITSIZE)) & 0x1)
 
 uint32_t allocate_block();
+void set_block(uint32_t addr);
 void free_block(uint32_t i);
 uint32_t first_free_block();
 void pmm_init(uint32_t mem_size);

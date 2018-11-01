@@ -22,6 +22,18 @@ uint32_t allocate_block() { // returns physical address of first free block
 	return block;
 }
 
+void set_block(uint32_t addr) { // takes an address sets bit for addr in bitmap
+	if(addr % 0x1000 != 0) {
+		kprint("Trying to set bitmap with misaligned address: ");
+		kprint("0x");
+		khex(addr);
+		kprint("\n");
+		return;
+	}
+	
+	SETBIT(addr / BLOCK_SIZE);
+}
+
 void free_block(uint32_t i) {
 	CLEARBIT(i);
 }

@@ -44,7 +44,9 @@ void map_virtual_address(page_directory_t* dir, uint32_t vaddr, uint32_t paddr) 
 	
 	page_table_t* table = dir->ref_tables[pd_idx];
 	if(!table->pages[pt_idx].present) {
-		uint32_t addr = paddr ? paddr : allocate_block();
+		uint32_t addr = paddr;
+		if(!addr) addr = allocate_block();
+		else set_block(addr);
 		table->pages[pt_idx].present = 1;
 		table->pages[pt_idx].rw = 1;
 		table->pages[pt_idx].user = 1;
@@ -71,16 +73,13 @@ void paging_init() {
 	register_interrupt_handler(14, (isr_t) page_fault);
 
 	tmp_heap = PAGE_ALIGN((uint8_t*) (bitmap + bitmap_size));
-	
 	page_directory = (page_directory_t*) kmalloc_a(sizeof(page_directory_t));
 	page_dir_loc = (uint32_t) page_directory - BASE_VIRTUAL;
 	memory_set((uint8_t*) page_directory, 0, sizeof(page_directory_t));
 	
-	uint32_t i, j;
-	for(i = 0; i < 0x100000; i += 0x1000) map_virtual_address(page_directory, i, 0); // important this happens first, reserves space in pmm for <1MB grub stuff and identity maps it
-	for(j = 0x100000; j < 0x400000; j += 0x1000) map_virtual_address(page_directory, j + BASE_VIRTUAL, j);
-	
-	asm volatile("bpointdebug:");
+	uint32_t i;
+	for(i = 0; i < 0x400000; i += 0x1000) map_virtual_address(page_directory, i + BASE_VIRTUAL, i); // important this happens first, reserves space in pmm for <1MB grub stuff
+
 	asm volatile("cli");
 	load_page_dir(page_dir_loc);
 	asm volatile("sti");
@@ -107,4 +106,5 @@ void page_fault(registers_t regs) {
 	kpanic("PAGE FAULT - STOPPING KERNEL\n");
 	
 	UNUSED(id);
+	for(;;) {}
 }
