@@ -54,7 +54,8 @@ extern uint32_t BootPageDirectory;
 void paging_init();
 void page_fault(registers_t regs);
 void map_virtual_address(page_directory_t* dir, uint32_t vaddr, uint32_t paddr);
-page_directory_t* current_page_directory();	
+void* ksbrk(uint16_t size);
+page_directory_t* current_page_directory();  
 uint8_t* tmp_heap;
 
 #endif

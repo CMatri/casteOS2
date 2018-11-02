@@ -1,8 +1,8 @@
-// continue from https://github.com/dipolukarov/osdev/blob/master/paging.c
 #include "isr.h"
 #include "pmm.h"
-#include "paging.h"
 #include "isr.h"
+#include "heap.h"
+#include "paging.h"
 #include "../libc/mem.h"
 #include "../libc/common.h"
 #include "../kernel/kernel.h"
@@ -10,6 +10,7 @@
 
 static page_directory_t* page_directory = 0;
 static uint32_t page_dir_loc = 0;
+int paging_enabled = 0;
 
 void* dumb_kmalloc_a(uint32_t size) {
 	void* ret = tmp_heap;
@@ -33,7 +34,7 @@ void map_virtual_address(page_directory_t* dir, uint32_t vaddr, uint32_t paddr) 
 	}
 	
 	if(!dir->ref_tables[pd_idx]) {		
-		page_table_t* t = dumb_kmalloc_a(sizeof(page_table_t));
+		page_table_t* t = paging_enabled ? kmalloc(sizeof(page_table_t)) : dumb_kmalloc_a(sizeof(page_table_t));
 		memory_set((uint8_t*) t, 0, sizeof(page_table_t));
 		uint32_t t_paddr = (uint32_t) t - BASE_VIRTUAL;
 		
@@ -85,6 +86,8 @@ void paging_init() {
 	asm volatile("cli"); // disable interrupts before setting cr3 to page directory so IRQs and ISRs don't get messed up
 	load_page_dir(page_dir_loc);
 	asm volatile("sti");
+
+	paging_enabled = 1;
 }
 
 void page_fault(registers_t regs) {
@@ -109,4 +112,25 @@ void page_fault(registers_t regs) {
 	
 	UNUSED(id);
 	for(;;) { asm volatile("hlt"); }
+}
+
+void* ksbrk(uint16_t size) { // TODO: Implement for size < 0
+	if(!size) return (void*) heap_curr;
+	else if(size > 0) {
+		void* old_heap_curr = (void*) heap_curr;
+		void* new_boundary = heap_curr + (uint32_t) size;
+		if(new_boundary <= heap_end) { heap_curr = (uint32_t) new_boundary; return old_heap_curr; }
+		else if(new_boundary > heap_max) return 0;
+		else if(new_boundary > heap_end) {
+			void* runner = (void*) heap_end;
+			while(runner < new_boundary) {
+				map_virtual_address(page_directory, (uint32_t) runner, 0);
+				runner += PAGE_SIZE;
+			} 
+			// potential bug check impl here: https://github.com/szhou42/osdev/blob/master/src/kernel/mem/paging.c
+			heap_end = runner;
+			heap_curr = new_boundary;
+			return old_heap_curr;
+		}
+	}
 }
