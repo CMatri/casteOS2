@@ -19,10 +19,20 @@ void load_mmap(struct multiboot_header *mbt) {
 
 void print_mmap() {
 	klog("======= MEMORY MAP =======\n");
-	
-	uint32_t i;
-	for(i = 0; i < mmap.length; i++) {
+	kprint("MEM: ");
+	klog("MEM: ");
+	kdec(mmap.total_memory / 1024 / 1024);
+	kldec(mmap.total_memory / 1024 / 1024);
+	kprint(" MB (0x");
+	klog(" MB (0x");
+	khex(mmap.total_memory);
+	klhex(mmap.total_memory);
+	kprint(" bytes)\n");	
+	klog(" bytes)");
+	uint32_t i = 0;
+	for(; i < mmap.length; i++) {
 		mboot_memmap_t m = mmap.entries[i];
+		klog("\n--------------------------\n");
 		klog("Base addr: ");
 		klhex(m.base_addr_low);
 		klhex(m.base_addr_high);
@@ -31,13 +41,6 @@ void print_mmap() {
 		klhex((uint32_t) m.length);
 		klog("\nType: ");
 		klog(MULTIBOOT_MMAP_TYPES[m.type]);
-		klog("\n--------------------------\n");
 	}
-	
-	kprint("Available Memory: 0x");
-	klog("Available Memory: 0x");
-	khex(mmap.total_memory);
-	klhex(mmap.total_memory);
 	klog("\n==========================\n");
-	kprint("\n");
 }

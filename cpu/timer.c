@@ -2,7 +2,7 @@
 #include "isr.h"
 #include "ports.h"
 #include "../drivers/screen.h"
-#include "../libc/function.h"
+#include "../libc/common.h"
 
 uint32_t tick = 0;
 

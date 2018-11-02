@@ -1,26 +1,29 @@
-
 // continue from https://github.com/dipolukarov/osdev/blob/master/paging.c
 #include "isr.h"
 #include "pmm.h"
 #include "paging.h"
 #include "isr.h"
 #include "../libc/mem.h"
-#include "../libc/function.h"
+#include "../libc/common.h"
 #include "../kernel/kernel.h"
 #include "../drivers/screen.h"
 
 static page_directory_t* page_directory = 0;
 static uint32_t page_dir_loc = 0;
-uint8_t* tmp_heap;
 
-void* kmalloc_a(uint32_t size) {
+void* dumb_kmalloc_a(uint32_t size) {
 	void* ret = tmp_heap;
 	if(!IS_ALIGN(ret)) ret = (void*) PAGE_ALIGN(ret);
 	tmp_heap += size;
 	return ret;
 }
 
+page_directory_t* current_page_directory() {
+	return page_directory;
+}
+
 void map_virtual_address(page_directory_t* dir, uint32_t vaddr, uint32_t paddr) {
+	if(vaddr % PAGE_SIZE != 0 || paddr % PAGE_SIZE != 0) kpanic("Mapping misaligned addresses\n");
 	uint32_t pd_idx = (uint32_t) vaddr >> 22;
 	uint32_t pt_idx = (uint32_t) (vaddr >> 12) & 0x03FF;
 	
@@ -30,7 +33,7 @@ void map_virtual_address(page_directory_t* dir, uint32_t vaddr, uint32_t paddr) 
 	}
 	
 	if(!dir->ref_tables[pd_idx]) {		
-		page_table_t* t = kmalloc_a(sizeof(page_table_t));
+		page_table_t* t = dumb_kmalloc_a(sizeof(page_table_t));
 		memory_set((uint8_t*) t, 0, sizeof(page_table_t));
 		uint32_t t_paddr = (uint32_t) t - BASE_VIRTUAL;
 		
@@ -65,22 +68,21 @@ void load_page_dir(uint32_t dir) {
     asm volatile("mov %%cr0, %0" : "=r"(cr0));
     cr0 = cr0 | 0x80000000;
 	asm volatile("mov %0, %%cr0" :: "r"(cr0));
-	
-	kprint("Successful page directory switch.\n");
 }
 
 void paging_init() {
 	register_interrupt_handler(14, (isr_t) page_fault);
 
 	tmp_heap = PAGE_ALIGN((uint8_t*) (bitmap + bitmap_size));
-	page_directory = (page_directory_t*) kmalloc_a(sizeof(page_directory_t));
+	page_directory = (page_directory_t*) dumb_kmalloc_a(sizeof(page_directory_t));
 	page_dir_loc = (uint32_t) page_directory - BASE_VIRTUAL;
 	memory_set((uint8_t*) page_directory, 0, sizeof(page_directory_t));
 	
-	uint32_t i;
-	for(i = 0; i < 0x400000; i += 0x1000) map_virtual_address(page_directory, i + BASE_VIRTUAL, i); // important this happens first, reserves space in pmm for <1MB grub stuff
+	uint32_t vaddr = BASE_VIRTUAL;
+	uint32_t paddr = 0;
+	for(; paddr < 16 * M; paddr += PAGE_SIZE, vaddr += PAGE_SIZE) map_virtual_address(page_directory, vaddr, paddr); // map first 16 MB of memory, this is important. Also reserves space in the pmm for kernel and GRUB.
 
-	asm volatile("cli");
+	asm volatile("cli"); // disable interrupts before setting cr3 to page directory so IRQs and ISRs don't get messed up
 	load_page_dir(page_dir_loc);
 	asm volatile("sti");
 }
@@ -106,5 +108,5 @@ void page_fault(registers_t regs) {
 	kpanic("PAGE FAULT - STOPPING KERNEL\n");
 	
 	UNUSED(id);
-	for(;;) {}
+	for(;;) { asm volatile("hlt"); }
 }

@@ -8,6 +8,7 @@
 #define PAGE_ALIGN(addr) ((((uint32_t)(addr)) & 0xFFFFF000) + 0x1000)
 #define SET_PGBIT(cr0) (cr0 = cr0 | 0x80000000)
 #define CLEAR_PSEBIT(cr4) (cr4 = cr4 & 0xffffffef)
+#define PAGE_SIZE 0x1000
 
 typedef struct page_dir_entry {
     unsigned int present    : 1;
@@ -47,12 +48,13 @@ typedef struct page_directory {
     page_table_t * ref_tables[1024];
 } page_directory_t;
 
-
 extern void load_page_directory(unsigned int*);
 extern void enable_paging();
 extern uint32_t BootPageDirectory;
 void paging_init();
 void page_fault(registers_t regs);
 void map_virtual_address(page_directory_t* dir, uint32_t vaddr, uint32_t paddr);
-	
+page_directory_t* current_page_directory();	
+uint8_t* tmp_heap;
+
 #endif

@@ -1,9 +1,9 @@
+#include "screen.h"
 #include "keyboard.h"
 #include "../cpu/ports.h"
 #include "../cpu/isr.h"
-#include "screen.h"
 #include "../libc/string.h"
-#include "../libc/function.h"
+#include "../libc/common.h"
 #include "../kernel/kernel.h"
 #include "../drivers/logger.h"
 
