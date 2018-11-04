@@ -1,22 +1,27 @@
-C_SOURCES = $(wildcard libc/*.c kernel/boot/*.c kernel/cpu/*.c kernel/devices/*.c kernel/io/*.c kernel/mem/*.c kernel/misc/*.c kernel/sys/*.c kernel/*.c)
+C_SOURCES = $(wildcard kernel/boot/*.c kernel/cpu/*.c kernel/devices/*.c kernel/io/*.c kernel/mem/*.c kernel/misc/*.c kernel/sys/*.c kernel/*.c)
 NASM_SOURCES = $(wildcard kernel/boot/*.asm kernel/cpu/*.asm kernel/devices/*.asm kernel/io/*.asm kernel/mem/*.asm kernel/misc/*.asm kernel/sys/*.asm kernel/*.asm)
-HEADERS = $(wildcard include/libc/*.h include/kernel/boot/*.h include/kernel/cpu/*.h include/kernel/devices/*.h include/kernel/io/*.h include/kernel/mem/*.h include/kernel/misc/*.h include/kernel/sys/*.h)
+HEADERS = $(wildcard include/kernel/boot/*.h include/kernel/cpu/*.h include/kernel/devices/*.h include/kernel/io/*.h include/kernel/mem/*.h include/kernel/misc/*.h include/kernel/sys/*.h)
 # Nice syntax for file extension replacement
 OBJ = ${C_SOURCES:.c=.o} # cpu/interrupt.o cpu/gdt_init.o cpu/paging_init.o } 
 OBJNASM = ${NASM_SOURCES:.asm=.o}
+
+LIBC_SOURCES = $(wildcard libc/*.c)
+LIBC_HEADERS = $(wildcard libc/include/*.h)
+OBJLIBC = ${LIBC_SOURCES:.c=.o}
+
 
 # Change this if your cross-compiler is somewhere else
 CC = /usr/local/i386elfgcc/bin/i386-elf-gcc
 GDB = /usr/local/i386elfgcc/bin/i386-elf-gdb
 # -g: Use debugging symbols in gcc
-CFLAGS = -g -ffreestanding -Wall -Wextra -fno-exceptions -m32 -I./include
+CFLAGS = -g -ffreestanding -Wall -Wextra -fno-exceptions -m32 -lk -I./include -I./libc/include
 
 kernel.bin: ${OBJNASM} ${OBJ}
-	i386-elf-gcc -o $@ -T linker.ld $^ -ffreestanding -O2 -nostdlib -lgcc
+	${CC} -o $@ -T linker.ld $^ -ffreestanding -O2 -nostdlib libc/libc.a -lgcc
 	cp kernel.bin isodir/boot/myos.bin
 
 kernel.elf: ${OBJNASM} ${OBJ}
-	i386-elf-gcc -o $@ -T linker.ld $^ -ffreestanding -O2 -nostdlib -lgcc
+	${CC} -o $@ -T linker.ld $^ -ffreestanding -O2 -nostdlib -lgcc
 
 myos.iso: kernel.bin
 	grub-mkrescue -o myos.iso isodir
