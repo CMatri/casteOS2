@@ -25,4 +25,9 @@ Base addr: FFFC00000
 Length: 040000
 Type: RESERVED
 ==========================
+Graphics buffer: 0xC053D008
+Linear frame buffer location: 0xFD000000 (VIRT), 0xFD000000 (PHYS)
+Bytes per line: 7680
+Width: 1920
+Height: 1080
 Kernel started.

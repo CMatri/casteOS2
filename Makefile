@@ -1,19 +1,21 @@
-C_SOURCES = $(wildcard kernel/*.c drivers/*.c cpu/*.c libc/*.c)
-HEADERS = $(wildcard kernel/*.h drivers/*.h cpu/*.h libc/*.h)
+C_SOURCES = $(wildcard libc/*.c kernel/boot/*.c kernel/cpu/*.c kernel/devices/*.c kernel/io/*.c kernel/mem/*.c kernel/misc/*.c kernel/sys/*.c kernel/*.c)
+NASM_SOURCES = $(wildcard kernel/boot/*.asm kernel/cpu/*.asm kernel/devices/*.asm kernel/io/*.asm kernel/mem/*.asm kernel/misc/*.asm kernel/sys/*.asm kernel/*.asm)
+HEADERS = $(wildcard include/libc/*.h include/kernel/boot/*.h include/kernel/cpu/*.h include/kernel/devices/*.h include/kernel/io/*.h include/kernel/mem/*.h include/kernel/misc/*.h include/kernel/sys/*.h)
 # Nice syntax for file extension replacement
-OBJ = ${C_SOURCES:.c=.o cpu/interrupt.o cpu/gdt_init.o cpu/paging_init.o } 
+OBJ = ${C_SOURCES:.c=.o} # cpu/interrupt.o cpu/gdt_init.o cpu/paging_init.o } 
+OBJNASM = ${NASM_SOURCES:.asm=.o}
 
 # Change this if your cross-compiler is somewhere else
 CC = /usr/local/i386elfgcc/bin/i386-elf-gcc
 GDB = /usr/local/i386elfgcc/bin/i386-elf-gdb
 # -g: Use debugging symbols in gcc
-CFLAGS = -g -ffreestanding -Wall -Wextra -fno-exceptions -m32
+CFLAGS = -g -ffreestanding -Wall -Wextra -fno-exceptions -m32 -I./include
 
-kernel.bin: boot/grub_boot.o ${OBJ}
+kernel.bin: ${OBJNASM} ${OBJ}
 	i386-elf-gcc -o $@ -T linker.ld $^ -ffreestanding -O2 -nostdlib -lgcc
 	cp kernel.bin isodir/boot/myos.bin
 
-kernel.elf: boot/grub_boot.o ${OBJ}
+kernel.elf: ${OBJNASM} ${OBJ}
 	i386-elf-gcc -o $@ -T linker.ld $^ -ffreestanding -O2 -nostdlib -lgcc
 
 myos.iso: kernel.bin
@@ -48,4 +50,4 @@ debug: kernel.bin kernel.elf myos.iso
 
 clean:
 	rm -rf *.bin *.dis *.o os-image.bin *.elf *.iso
-	rm -rf kernel/*.o boot/*.bin drivers/*.o boot/*.o cpu/*.o libc/*.o boot/grub/*.bin
+	rm -rf kernel/*/*.o kernel/*.o libc/*.o boot/grub/*.bin
