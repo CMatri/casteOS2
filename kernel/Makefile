@@ -13,7 +13,7 @@ BOOTDIR?=$(EXEC_PREFIX)/boot
 INCLUDEDIR?=$(PREFIX)/include
 
 CFLAGS:=$(CFLAGS) -ffreestanding -fbuiltin -Wall -Wextra -Wmaybe-uninitialized
-CPPFLAGS:=$(CPPFLAGS) -D__is_myos_kernel -Iinclude
+CPPFLAGS:=$(CPPFLAGS) -D__is_myos_kernel -Iinclude 
 LDFLAGS:=$(LDFLAGS)
 LIBS:=$(LIBS) -nostdlib -lk -lgcc
 
@@ -47,15 +47,18 @@ $(OBJS) \
 $(CRTEND_OBJ) \
 $(CRTN_OBJ) \
 
-all: myos.kernel
+all: myos.kernel kernel.elf
 
 .PHONY: all clean install install-headers install-kernel
 
 myos.kernel: $(OBJ_LINK_LIST) $(ARCHDIR)/linker.ld
 	$(CC) -T $(ARCHDIR)/linker.ld -o $@ $(CFLAGS) $(OBJ_LINK_LIST) $(LDFLAGS) $(LIBS)
 
+kernel.elf: $(OBJ_LINK_LIST) $(ARCHDIR)/linker.ld
+	$(CC) -T $(ARCHDIR)/linker.ld -o $@ $(OBJ_LINK_LIST) $(CFLAGS) $(LIBS)
+
 %.o: %.c
-	$(CC) -c $< -o $@ -std=gnu11 $(CFLAGS) $(CPPFLAGS)
+	$(CC) -c $< -o $@ $(CFLAGS) $(CPPFLAGS)
 
 %.o: %.asm
 	nasm -felf32 $< -o $@
@@ -72,6 +75,6 @@ install-headers:
 	mkdir -p $(DESTDIR)$(INCLUDEDIR)
 	cp -RTv include $(DESTDIR)$(INCLUDEDIR)
 
-install-kernel: myos.kernel
+install-kernel: all
 	mkdir -p $(DESTDIR)$(BOOTDIR)
 	cp myos.kernel $(DESTDIR)$(BOOTDIR)

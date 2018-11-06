@@ -1,0 +1,1 @@
+#include <kernel/vesa_graphics.h>

@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdio.h>
 #include <kernel/kernel.h>
 #include <kernel/pmm.h>
 #include <kernel/isr.h>
@@ -8,7 +9,9 @@
 #include <kernel/paging.h>
 #include <kernel/vesa_graphics.h>
 #include <kernel/screen.h>
+#include <kernel/shell.h>
 #include <kernel/logger.h>
+#include <kernel/ps2mouse.h>
 
 void kmain(uint32_t ebx) {	
 	struct multiboot_header *mbt = (struct multiboot_header*) ebx;
@@ -20,24 +23,17 @@ void kmain(uint32_t ebx) {
 	irq_install();
 	pmm_init(mmap.total_memory);
 	paging_init();
-	heap_init();	
+	heap_init();
+	init_stdio(kmalloc_a(STDIO_SIZE));
 	graphics_init(mbt);
+	printf("CasteOSv2 kernel initialized. Beginning shell.\n");
 
-	kprint("\nConnor's kernel\n"
-        "Type END to halt the CPU\n> ");
-	klog("Kernel started.\n");
 	for(;;){
+	//	shell();
 		update_graphics();
 	}
 }
 
 void user_input(char *input) {
-    if (memcmp(input, "END", sizeof(input)) == 0) {
-        kprint("Stopping the CPU. Bye!\n");
-        asm volatile("hlt");
-    }
-
-    kprint("Shell: ");
-    kprint(input);
-    kprint("\n> ");
+	memcpy(stdin, input, strlen(input));
 }

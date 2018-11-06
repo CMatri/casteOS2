@@ -17,8 +17,15 @@ heap_meta_t* get_free_block(uint16_t size) {
 	return 0;
 }
 
-void* kmalloc(uint16_t size) {
-	uint16_t total_size;
+void* kmalloc(uint32_t size, int align) {
+	if (align) {
+		heap_curr = PAGE_ALIGN(heap_curr);
+	}
+	
+	klhex(size);
+	klog("\n");
+
+	uint32_t total_size;
 	void* block;
 	heap_meta_t *header;
 	if(!size) return 0;
@@ -43,13 +50,20 @@ void* kmalloc(uint16_t size) {
 	return (void*)(header + 1);
 }
 
+void* kmalloc_a(uint32_t size) {
+	return kmalloc(size, 1);
+}
+
 void heap_init() {
 	heap_curr = PAGE_ALIGN((uint32_t) (tmp_heap_end)); // kernel heap located 8 MB after kernel.
 	heap_start = heap_curr;
 	heap_end = heap_start;
-	heap_max = 8 * 1024 * 1024;
+	heap_max = 32 * 1024 * 1024;
 	kheap_enabled = 1;
 	kprint("Kernel heap initialized at 0x");
 	khex(heap_start);
 	kprint("\n");
+	klog("Kernel heap initialized at 0x");
+	klhex(heap_start);
+	klog("\n");
 }

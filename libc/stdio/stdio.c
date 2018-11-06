@@ -1,16 +1,9 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
 
-uint8_t *inbuffer;
-
-void init_stdio()
-{
+void init_stdio(uint8_t* inbuffer) {
 	stdin = (uint8_t*) inbuffer;
 
-	for(int i = 0; i < STDIO_SIZE; i++)
-	{
-		inbuffer[i] = 0;
-	}
-
-	putchar('\0');
-	putchar('\0');
+	for(int i = 0; i < STDIO_SIZE; i++) inbuffer[i] = 0;
 }

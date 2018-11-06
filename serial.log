@@ -25,9 +25,16 @@ Base addr: FFFC00000
 Length: 040000
 Type: RESERVED
 ==========================
-Graphics buffer: 0xC0536008
+Kernel heap initialized at 0xC0538000
+1000
+7E9000
+190
+4C
+30D400
+Graphics buffer: 0xC053A010
 Linear frame buffer location: 0xFD000000 (VIRT), 0xFD000000 (PHYS)
 Bytes per line: 7680
 Width: 1920
 Height: 1080
-Kernel started.
+buffer size 7E9000
+rwindow alloc at 0xC0D231B0

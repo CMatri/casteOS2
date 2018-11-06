@@ -3,6 +3,37 @@
 
 #include <stdint.h>
 #include <kernel/multiboot.h>
+#include <kernel/ps2mouse.h>
+
+#define MAX_WINDOWS 100
+
+typedef struct bitmap {
+    uint32_t width;
+    uint32_t height;
+    uint32_t size;
+    uint32_t *data;
+} bitmap_t;
+
+typedef struct rect {
+    int32_t x1;
+    int32_t y1;
+    int32_t x2;
+    int32_t y2;
+} rect_t;
+
+struct wind_list {
+    rect_t position;
+    uint64_t handle;
+    uint64_t flags;
+    char *caption;
+    uint8_t needs_repaint;
+
+    bitmap_t wbmp;
+
+    struct wind_list *prev, *next;
+    struct wind_list *first_child, *last_child;
+    struct wind_list *parent;
+};
 
 extern uint64_t GFX_MODE;
 extern int VBE_HD;
@@ -15,6 +46,14 @@ vbe_info_t* info;
 void graphics_init(struct multiboot_header* mbt);
 void update_graphics();
 void draw_string(char* string, uint16_t x, uint16_t y, uint32_t foreground, uint32_t background);
+void mouse_packet(mouse_device_packet_t packet);
+
+void put_pixel(bitmap_t* bmp, uint16_t x, uint16_t y, uint32_t color);
+void draw_bitmap(bitmap_t* bmp, uint32_t x, uint32_t y);
+void fill_rect(bitmap_t* bmp, uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint32_t color);
+void vesa_clear_screen(uint32_t color);
+void draw_string(char* string, uint16_t x, uint16_t y, uint32_t foreground, uint32_t background);
+void draw_char(uint8_t c, uint16_t x, uint16_t y, uint32_t foreground, uint32_t background);
 
 static uint8_t Terminess_Powerline_Bold[894][12] = {
 	{ 0x00, 0x00, 0xF8, 0xF8, 0xF8, 0xF8, 0xF8, 0xF8, 0xF8, 0xF8, 0x00, 0x00 }, // 0 is uni25AE
