@@ -12,6 +12,7 @@
 #include <kernel/shell.h>
 #include <kernel/logger.h>
 #include <kernel/ps2mouse.h>
+#include <kernel/bitmap.h>
 
 void kmain(uint32_t ebx) {	
 	struct multiboot_header *mbt = (struct multiboot_header*) ebx;

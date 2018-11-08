@@ -6,6 +6,7 @@
 #include <kernel/screen.h>
 #include <kernel/paging.h>
 #include <kernel/vesa_graphics.h>
+#include <kernel/nasa_logo.h>
 
 uint32_t mouse_pos_x;
 uint32_t mouse_pos_y;
@@ -13,6 +14,7 @@ uint8_t* buffer;
 uint32_t buffer_size;
 int VBE_HD;
 struct wind_list **wm_handles;
+bitmap_img_t* bmp;
 
 uint64_t wm_num_windows;
 struct wind_list *root_window;
@@ -40,10 +42,10 @@ uint16_t mouse_bmp[19] = {
 };
 
 void mouse_packet(mouse_device_packet_t packet) {
+	//if(packet.buttons & LEFT_CLICK) klog("CLICK");
 	if(mouse_pos_x + packet.x_difference < screen_width && mouse_pos_x + packet.x_difference > 0) mouse_pos_x += packet.x_difference;
 	if(mouse_pos_y - packet.y_difference < screen_height && mouse_pos_y + packet.y_difference > 0) mouse_pos_y -= packet.y_difference;
 }
-
 
 void draw_char(uint8_t c, uint16_t x, uint16_t y, uint32_t foreground, uint32_t background) {
 	uint16_t cx, cy;
@@ -73,15 +75,10 @@ void draw_mouse(int x, int y) {
 		uint8_t *where = buffer + x * pixel_width + y * bytes_per_line;
 
 		for(cy = 0; cy < 19; cy++) {
-			uint8_t yz = ((cy / 19.0) * 255);//(abs(9 - cy) / 9.0) * 255;
-
 			for(cx = 1; cx < 16; cx++) {
-				uint8_t xz = 255 - (((cx / 16.0) * 255) + yz) / 2.0;//(yz + ((abs(7 - cx) / 8.0) * 255)) / 2;
-
-				where[cx * 4] = mouse_bmp[cy] & mask[16 - cx] ? xz : where[cx * 4];
-				where[cx * 4 + 1] = mouse_bmp[cy] & mask[16 - cx] ? xz : where[cx * 4 + 1];
-				where[cx * 4 + 2] = mouse_bmp[cy] & mask[16 - cx] ? xz: where[cx * 4 + 2];
-				//put_pixel(x + cx, y + cy, mouse_bmp[cy] & mask[16 - cx] ? 0xFF00FF : 0x000000);
+				where[cx * 4] = mouse_bmp[cy] & mask[16 - cx] ? 255 - where[cx * 4] : where[cx * 4];
+				where[cx * 4 + 1] = mouse_bmp[cy] & mask[16 - cx] ? 255 - where[cx * 4 + 1] : where[cx * 4 + 1];
+				where[cx * 4 + 2] = mouse_bmp[cy] & mask[16 - cx] ? 255 - where[cx * 4 + 2] : where[cx * 4 + 2];
 			}
 			where += bytes_per_line;
 		}
@@ -98,12 +95,13 @@ void fill_rect(bitmap_t* bmp, uint16_t x, uint16_t y, uint16_t width, uint16_t h
 		}
 	} else {
 		uint8_t* where = buffer + x * pixel_width + y * bytes_per_line;
-		uint16_t i, j;
+		uint32_t i, j;
 		for(i = 0; i < height; i++) {
 			for(j = 0; j < width; j++) {
 				where[j * 4] = color & 255;
 				where[j * 4 + 1] = (color >> 8) & 255;
 				where[j * 4 + 2] = (color >> 16) & 255;
+				where[j * 4 + 3] = (color >> 24) & 255;
 			}
 			where += bytes_per_line;
 		}
@@ -113,11 +111,11 @@ void fill_rect(bitmap_t* bmp, uint16_t x, uint16_t y, uint16_t width, uint16_t h
 void put_pixel(bitmap_t* bmp, uint16_t x, uint16_t y, uint32_t color) {
 	if(bmp) {
 		if(x > bmp->width || y > bmp->height) return;
-		unsigned where = x + y * bmp->width;
-
-	   	bmp->data[where] = color & 255;
-	   	bmp->data[where + 1] = (color >> 8) & 255;
-	   	bmp->data[where + 2] = (color >> 16) & 255;
+		uint8_t* where = bmp->data + x + y * bmp->width * pixel_width;
+		where[0] = color & 255;
+		where[1] = (color >> 8) & 255;
+		where[2] = (color >> 16) & 255;
+		where[3] = (color >> 24) & 255;	   	
 	} else {
 		if(x > screen_width || y > screen_height) return;
 		unsigned where = x * pixel_width + y * bytes_per_line;
@@ -125,6 +123,7 @@ void put_pixel(bitmap_t* bmp, uint16_t x, uint16_t y, uint32_t color) {
 	   	buffer[where] = color & 255;
 	   	buffer[where + 1] = (color >> 8) & 255;
 	   	buffer[where + 2] = (color >> 16) & 255;
+      	buffer[where + 3] = (color >> 24) & 255;
    }
 }
 
@@ -133,8 +132,25 @@ void draw_bitmap(bitmap_t* bmp, uint32_t x, uint32_t y) {
     uint32_t ty = 0;
     uint8_t* loc = (uint8_t*)(buffer + y * bytes_per_line + x * pixel_width);
     for (; ty < bmp->height; ty++){
-		memcpy((uint8_t*)(loc + ty * bytes_per_line), (uint8_t*)(bmp->data + ty * bmp->width), bmp->width);
+		memcpy((uint8_t*)(loc + ty * bytes_per_line), (uint8_t*)(bmp->data + ty * bmp->width * pixel_width), bmp->width * pixel_width);
     }
+}
+
+void draw_bitmap_image(bitmap_img_t* bmp, uint16_t x, uint16_t y) {
+	uint8_t* bytes = bmp->image_bytes;
+	uint8_t* where = (uint8_t*) (buffer + x * pixel_width + y * bytes_per_line);
+	int i, j;
+
+	for(j = 1; j < bmp->height; j++) {
+		int cy = bmp->height - j;
+		for(i = 0; i < bmp->width; i++) {
+			where[i * 4] = bytes[cy * bmp->width * 3 + i * 3];
+			where[i * 4 + 1] = bytes[cy * bmp->width * 3 + i * 3 + 1];
+			where[i * 4 + 2] = bytes[cy * bmp->width * 3 + i * 3 + 2];
+			where[i * 4 + 3] = 0x0;
+		}
+		where += bytes_per_line;
+	}
 }
 
 void repaint_children(uint32_t parent) {
@@ -152,7 +168,19 @@ void repaint_children(uint32_t parent) {
 	for (child = wnd->first_child; child != 0; child = child->next) repaint_children(child->handle);
 }
 
-struct wind_list* create_window(char* caption, int x, int y, int width, int height) {
+void move_to_front(struct wind_list* wnd) {
+	if (wnd->prev != 0) wnd->prev->next = wnd->next;
+    if (wnd->next != 0) wnd->next->prev = wnd->prev;
+    if (wnd == wnd->parent->first_child) wnd->parent->first_child = wnd->next;
+    if (wnd == wnd->parent->last_child) wnd->parent->last_child = wnd->prev;
+    wnd->prev = wnd->parent->last_child;
+    wnd->next = 0;
+    if (wnd->parent->last_child != 0) wnd->parent->last_child->next = wnd;
+    wnd->parent->last_child = wnd;
+    if (wnd->parent->first_child == 0) wnd->parent->first_child = wnd;
+}
+
+struct wind_list* create_window(struct wind_list* prev_wind, char* caption, int x, int y, int width, int height) {
 	if(wm_num_windows + 1 >= MAX_WINDOWS) return -1;
 	struct wind_list* w = (struct wind_list*) kmalloc(sizeof(struct wind_list), 0);
 	memset((uint8_t*) w, 0x0, sizeof(struct wind_list));
@@ -167,6 +195,22 @@ struct wind_list* create_window(char* caption, int x, int y, int width, int heig
 	w->wbmp.size = pixel_width * width * height;
 	w->wbmp.data = (uint32_t*) kmalloc(w->wbmp.size, 0);
 	memset((uint8_t*) w->wbmp.data, 0x0, w->wbmp.size);
+
+	if(!prev_wind) {
+		w->prev = 0;
+		w->next = 0;
+		w->first_child = 0;
+		w->last_child = 0;
+		w->parent = 0;
+	} else {
+		w->prev = prev_wind;
+		w->next = 0;
+		w->first_child = 0;
+		w->last_child = 0;
+		w->parent = prev_wind->parent ? prev_wind->parent : prev_wind;
+		move_to_front(w);
+	}
+
 	wm_handles[wm_num_windows++] = w;
 
 	return w;
@@ -177,6 +221,7 @@ void update_graphics() {
 
 	draw_string("CasteOS2 kernel VESA initialized!", 10, 10, 0xFFFFFFFF, 0x0);
 	repaint_children(root_window->handle);
+	draw_bitmap_image(bmp, 10, 10);
 	draw_mouse(mouse_pos_x, mouse_pos_y);
 	while ((port_byte_in(0x3DA) & 0x08));
     while (!(port_byte_in(0x3DA) & 0x08));
@@ -203,8 +248,13 @@ void graphics_init(struct multiboot_header* mbt) {
     wm_handles = kmalloc(sizeof(struct wind_list*) * MAX_WINDOWS, 0);
     memset((uint8_t*) wm_handles, 0, sizeof(struct wind_list*) * MAX_WINDOWS);
     
-	root_window = create_window("root window", 100, 100, 4000, 200);
-	fill_rect(&root_window->wbmp, 0, 0, root_window->wbmp.width, root_window->wbmp.height, 0xFFFFFFFF);
+	root_window = create_window(0, "root window", 100, 100, 1600, 720);
+	//struct wind_list* ch = create_window(root_window, "child window", 10, 10, 40, 20);
+
+	fill_rect(&root_window->wbmp, 0, 0, root_window->wbmp.width, root_window->wbmp.height, 0x00FF0000);
+	//fill_rect(&ch->wbmp, 0, 0, ch->wbmp.width, ch->wbmp.height, 0x0000FF00);
+
+	bmp = load_bitmap((bitmap_img_t*) (&nasa_logo_bmp), nasa_logo_bmp_length);
 	
 	klog("Graphics buffer: 0x");
 	klhex((uint32_t) buffer);
