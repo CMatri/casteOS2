@@ -17,7 +17,8 @@ struct wind_list **wm_handles;
 bitmap_img_t* bmp;
 
 uint64_t wm_num_windows;
-struct wind_list *root_window;
+struct wind_list* root_window;
+struct wind_list* ch;
 
 uint16_t mouse_bmp[19] = {
 	0b0110000000000000,
@@ -41,30 +42,14 @@ uint16_t mouse_bmp[19] = {
 	0b0000000001100000,
 };
 
-void mouse_packet(mouse_device_packet_t packet) {
+void vesa_mouse_packet(mouse_device_packet_t packet) {
 	//if(packet.buttons & LEFT_CLICK) klog("CLICK");
 	if(mouse_pos_x + packet.x_difference < screen_width && mouse_pos_x + packet.x_difference > 0) mouse_pos_x += packet.x_difference;
 	if(mouse_pos_y - packet.y_difference < screen_height && mouse_pos_y + packet.y_difference > 0) mouse_pos_y -= packet.y_difference;
 }
 
-void draw_char(uint8_t c, uint16_t x, uint16_t y, uint32_t foreground, uint32_t background) {
-	uint16_t cx, cy;
-	uint16_t mask[8] = { 1, 2, 4, 8, 16, 32, 64, 128 };
-
-	for(cy = 0; cy < 12; cy++) {
-		for(cx = 0; cx < 8; cx++) {
-			put_pixel(0, x + cx, y + cy, Terminess_Powerline_Bold[c][cy] & mask[7 - cx] ? foreground : background);
-		}
-	}
-}
-
-void draw_string(char* string, uint16_t x, uint16_t y, uint32_t foreground, uint32_t background) {
-	uint32_t i = 0;
-	for(; i < strlen(string); i++) draw_char(string[i], x + (i * 8), y, foreground, background);
-}
-
 void vesa_clear_screen(uint32_t color) {
-	fill_rect(0, 0, 0, screen_width, screen_height, color);
+	vesa_fill_rect(0, 0, 0, screen_width, screen_height, color);
 }
 
 void draw_mouse(int x, int y) {
@@ -85,12 +70,12 @@ void draw_mouse(int x, int y) {
 	}
 }
 
-void fill_rect(bitmap_t* bmp, uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint32_t color) {
+void vesa_fill_rect(bitmap_t* bmp, uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint32_t color) {
 	if(bmp) {
 		int i, j;
 		for(i = 0; i < width; i++) {
 			for(j = 0; j < height; j++) {
-				put_pixel(bmp, x + i, y + j, color);
+				vesa_put_pixel(bmp, x + i, y + j, color);
 			}
 		}
 	} else {
@@ -108,7 +93,7 @@ void fill_rect(bitmap_t* bmp, uint16_t x, uint16_t y, uint16_t width, uint16_t h
 	}
 }
 
-void put_pixel(bitmap_t* bmp, uint16_t x, uint16_t y, uint32_t color) {
+void vesa_put_pixel(bitmap_t* bmp, uint16_t x, uint16_t y, uint32_t color) {
 	if(bmp) {
 		if(x > bmp->width || y > bmp->height) return;
 		uint8_t* where = bmp->data + x + y * bmp->width * pixel_width;
@@ -127,7 +112,7 @@ void put_pixel(bitmap_t* bmp, uint16_t x, uint16_t y, uint32_t color) {
    }
 }
 
-void draw_bitmap(bitmap_t* bmp, uint32_t x, uint32_t y) {
+void vesa_draw_bitmap(bitmap_t* bmp, uint32_t x, uint32_t y) {
 	if(x > screen_width || y > screen_height) return;
     uint32_t ty = 0;
     uint8_t* loc = (uint8_t*)(buffer + y * bytes_per_line + x * pixel_width);
@@ -136,7 +121,7 @@ void draw_bitmap(bitmap_t* bmp, uint32_t x, uint32_t y) {
     }
 }
 
-void draw_bitmap_image(bitmap_img_t* bmp, uint16_t x, uint16_t y) {
+void vesa_draw_bitmap_image(bitmap_img_t* bmp, uint16_t x, uint16_t y) {
 	uint8_t* bytes = bmp->image_bytes;
 	uint8_t* where = (uint8_t*) (buffer + x * pixel_width + y * bytes_per_line);
 	int i, j;
@@ -164,7 +149,7 @@ void repaint_children(uint32_t parent) {
 		wnd->needs_repaint = 0;
 	}
 
-	draw_bitmap(&wnd->wbmp, wnd->position.x1, wnd->position.y1);
+	vesa_draw_bitmap(&wnd->wbmp, wnd->position.x1, wnd->position.y1);
 	for (child = wnd->first_child; child != 0; child = child->next) repaint_children(child->handle);
 }
 
@@ -216,19 +201,22 @@ struct wind_list* create_window(struct wind_list* prev_wind, char* caption, int 
 	return w;
 }
 
-void update_graphics() {
-	vesa_clear_screen(0x0);
+vbe_info_t* vesa_get_vbe_info() {
+	return info;
+}
 
-	draw_string("CasteOS2 kernel VESA initialized!", 10, 10, 0xFFFFFFFF, 0x0);
-	repaint_children(root_window->handle);
-	draw_bitmap_image(bmp, 10, 10);
+void vesa_update_graphics() {
+	vesa_clear_screen(0x0);
+	tty_draw();	
+	//repaint_children(root_window->handle);
+	//draw_bitmap_image(bmp, 200, 200);
 	draw_mouse(mouse_pos_x, mouse_pos_y);
 	while ((port_byte_in(0x3DA) & 0x08));
     while (!(port_byte_in(0x3DA) & 0x08));
 	memcpy(lfb, buffer, buffer_size);
 }
 
-void graphics_init(struct multiboot_header* mbt) {
+void vesa_graphics_init(struct multiboot_header* mbt) {
 	VBE_HD = 1;//!((int) &GFX_MODE);
 	info  = (vbe_info_t*) (mbt->vbe_mode_info + BASE_VIRTUAL);
 	lfb = (uint8_t*) info->physbase;
@@ -245,38 +233,16 @@ void graphics_init(struct multiboot_header* mbt) {
 	map_virtual_address_space(current_page_directory(), (uint32_t) lfb, (uint32_t) lfb, buffer_size); // Identity map linear frame buffer
 	buffer = (uint8_t*) kmalloc(buffer_size, 0);
 
-    wm_handles = kmalloc(sizeof(struct wind_list*) * MAX_WINDOWS, 0);
-    memset((uint8_t*) wm_handles, 0, sizeof(struct wind_list*) * MAX_WINDOWS);
+    //wm_handles = kmalloc(sizeof(struct wind_list*) * MAX_WINDOWS, 0);
+    //memset((uint8_t*) wm_handles, 0, sizeof(struct wind_list*) * MAX_WINDOWS);
     
-	root_window = create_window(0, "root window", 100, 100, 1600, 720);
-	//struct wind_list* ch = create_window(root_window, "child window", 10, 10, 40, 20);
+	//root_window = create_window(0, "root window", 100, 100, 1600, 720);
+	//ch = create_window(root_window, "child window", 10, 10, 40, 20);
 
-	fill_rect(&root_window->wbmp, 0, 0, root_window->wbmp.width, root_window->wbmp.height, 0x00FF0000);
+	//fill_rect(&root_window->wbmp, 0, 0, root_window->wbmp.width, root_window->wbmp.height, 0x00FF0000);
 	//fill_rect(&ch->wbmp, 0, 0, ch->wbmp.width, ch->wbmp.height, 0x0000FF00);
 
-	bmp = load_bitmap((bitmap_img_t*) (&nasa_logo_bmp), nasa_logo_bmp_length);
-	
-	klog("Graphics buffer: 0x");
-	klhex((uint32_t) buffer);
-	klog("\nLinear frame buffer location: 0x");
-	klhex((uint32_t) lfb);
-	klog(" (VIRT), 0x");
-	klhex(old_lfb);
-	klog(" (PHYS)\nBytes per line: ");
-	kldec(bytes_per_line);
-	klog("\nWidth: ");
-	kldec(screen_width);
-	klog("\nHeight: ");
-	kldec(screen_height);
-	klog("\n");
+	//bmp = load_bitmap((bitmap_img_t*) (&nasa_logo_bmp), nasa_logo_bmp_length);
 
 	memset(buffer, 0x0, buffer_size);
-
-	klog("buffer size ");
-	klhex(buffer_size);
-	klog("\n");
-
-	klog("rwindow alloc at 0x");
-	klhex(root_window);
-	klog("\n");
 }

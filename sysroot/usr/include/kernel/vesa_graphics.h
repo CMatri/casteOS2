@@ -44,18 +44,19 @@ uint16_t screen_width;
 uint16_t screen_height;
 uint16_t bytes_per_line;
 vbe_info_t* info;
-void graphics_init(struct multiboot_header* mbt);
-void update_graphics();
-void draw_string(char* string, uint16_t x, uint16_t y, uint32_t foreground, uint32_t background);
-void mouse_packet(mouse_device_packet_t packet);
+vbe_info_t* vesa_get_vbe_info();
+void vesa_graphics_init(struct multiboot_header* mbt);
+void vesa_update_graphics();
+void vesa_draw_string(char* string, uint16_t x, uint16_t y, uint32_t foreground, uint32_t background);
+void vesa_mouse_packet(mouse_device_packet_t packet);
 
-void put_pixel(bitmap_t* bmp, uint16_t x, uint16_t y, uint32_t color);
-void draw_bitmap(bitmap_t* bmp, uint32_t x, uint32_t y);
-void fill_rect(bitmap_t* bmp, uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint32_t color);
+void vesa_put_pixel(bitmap_t* bmp, uint16_t x, uint16_t y, uint32_t color);
+void vesa_draw_bitmap(bitmap_t* bmp, uint32_t x, uint32_t y);
+void vesa_fill_rect(bitmap_t* bmp, uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint32_t color);
 void vesa_clear_screen(uint32_t color);
-void draw_string(char* string, uint16_t x, uint16_t y, uint32_t foreground, uint32_t background);
-void draw_char(uint8_t c, uint16_t x, uint16_t y, uint32_t foreground, uint32_t background);
-void draw_bitmap_image(bitmap_img_t* bmp, uint16_t x, uint16_t y);
+void vesa_draw_string(char* string, uint16_t x, uint16_t y, uint32_t foreground, uint32_t background);
+void vesa_draw_char(uint8_t c, uint16_t x, uint16_t y, uint32_t foreground, uint32_t background);
+void vesa_draw_bitmap_image(bitmap_img_t* bmp, uint16_t x, uint16_t y);
 
 static uint8_t Terminess_Powerline_Bold[894][12] = {
 	{ 0x00, 0x00, 0xF8, 0xF8, 0xF8, 0xF8, 0xF8, 0xF8, 0xF8, 0xF8, 0x00, 0x00 }, // 0 is uni25AE

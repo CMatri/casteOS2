@@ -76,7 +76,7 @@ read_next:
 		status = port_byte_in(MOUSE_STATUS);
 	}
 	
-	mouse_packet(packet);
+	vesa_mouse_packet(packet);
 }
 
 void mouse_wait(uint8_t a_type) {
@@ -109,7 +109,6 @@ uint8_t mouse_read(void) {
 }
 
 void init_mouse() {
-	asm volatile("bpointdebug: ");
 	uint8_t status, result;
 	
 	mouse_wait(1);

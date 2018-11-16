@@ -8,7 +8,7 @@ int putchar(int ic)
 {
 #if defined(__is_myos_kernel)
 	char c = (char) ic;
-	print_char(c, -1, -1, WHITE_ON_BLACK);
+	kprint_char(c);
 #else
 	// TODO: You need to implement a write system call.
 #endif

@@ -1,10 +1,11 @@
 ; Declare constants for the multiboot header.
-MBALIGN  equ  1 << 0            			; align loaded modules on page boundaries
-MEMINFO  equ  1 << 1            			; provide memory map
-GFXMODE  equ  1 << 2						; graphics mode
-FLAGS    equ  MBALIGN | MEMINFO | GFXMODE	; this is the Multiboot 'flag' field
-MAGIC    equ  0x1BADB002        			; 'magic number' lets bootloader find the header
-CHECKSUM equ -(MAGIC + FLAGS)   			; checksum of above, to prove we are multiboot
+MBALIGN  		equ  1 << 0            				; align loaded modules on page boundaries
+MEMINFO  		equ  1 << 1            				; provide memory map
+GFXMODE  		equ  1 << 2							; graphics mode
+FLAGS    		equ  MBALIGN | MEMINFO | GFXMODE	; this is the Multiboot 'flag' field
+MAGIC    		equ  0x1BADB002        				; 'magic number' lets bootloader find the header
+CHECKSUM 		equ -(MAGIC + FLAGS)   				; checksum of above, to prove we are multiboot
+
 global GFX_MODE
 GFX_MODE equ 0
 WIDTH equ 1920
@@ -13,8 +14,10 @@ DEPTH equ 32
 FILLER_VAR equ 0
 
 global KERNEL_VIRTUAL_BASE
+global KERNEL_STACK_SIZE
 KERNEL_VIRTUAL_BASE equ 0xC0000000                  ; 3GB
 KERNEL_PAGE_NUMBER equ (KERNEL_VIRTUAL_BASE >> 22)  ; Page directory index of kernel's 4MB PTE.
+KERNEL_STACK_SIZE equ 4096 							; 4k stack
 
 extern kernel_virtual_start
 extern kernel_virtual_end
@@ -69,10 +72,12 @@ align 4
 ; System V ABI standard and de-facto extensions. The compiler will assume the
 ; stack is properly aligned and failure to align the stack will result in
 ; undefined behavior.
+global stack_bottom
+global stack_top
 section .bss
 align 16
 stack_bottom:
-resb 104856 ; 1 MB
+resb KERNEL_STACK_SIZE ; 1 KB
 stack_top:
 ; The linker script specifies _start as the entry point to the kernel and the
 ; bootloader will jump to this position once the kernel has been loaded. It

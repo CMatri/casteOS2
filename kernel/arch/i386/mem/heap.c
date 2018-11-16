@@ -18,25 +18,19 @@ heap_meta_t* get_free_block(uint16_t size) {
 }
 
 void* kmalloc(uint32_t size, int align) {
+	uint32_t total_size = total_size = sizeof(heap_meta_t) + size;
 	if (align) {
 		heap_curr = PAGE_ALIGN(heap_curr);
 	}
-	
-	klhex(size);
-	klog("\n");
-
-	uint32_t total_size;
 	void* block;
 	heap_meta_t *header;
 	if(!size) return 0;
-	
 	header = get_free_block(size);
 	if(header) {
 		header->free = 0;
 		return (void*) (header + 1);
 	}
-	
-	total_size = sizeof(heap_meta_t) + size;	
+		
 	block = ksbrk(size);
 	if(!block) kpanic("KERNEL OUT OF HEAP MEMORY\n");
 	header = block;

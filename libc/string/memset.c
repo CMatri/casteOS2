@@ -1,18 +1,19 @@
 #include <string.h>
 
-void* memset(void* bufptr, int value, size_t size)
+void *memset(void *dest, int value, size_t count)
 {
-	unsigned char* buf = (unsigned char*) bufptr;
-	size_t i = 0;
-	while ( i < size )
-	{
-		//printf(" %s ", itoa(i, 0, 10));
-		//printf(": %s\n ", itoa(size, 0, 10));
-		//if(i >= 5000) { i = 0; size -= 5000; }
-		buf[i] = (unsigned char) value;
-		i++;
-	}
-	return bufptr;
+   unsigned char val = (unsigned char)(value & 0xFF);
+   unsigned char *dest2 = (unsigned char*)(dest);
+
+   size_t i = 0;
+
+   while(i < count)
+   {
+      dest2[i] = val;
+      i++;
+   }
+
+   return dest;
 }
 
 char* toupper(char* string)

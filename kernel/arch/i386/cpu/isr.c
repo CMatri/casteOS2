@@ -76,6 +76,7 @@ void isr_install() {
     set_idt_gate(45, (uint32_t)irq13);
     set_idt_gate(46, (uint32_t)irq14);
     set_idt_gate(47, (uint32_t)irq15);
+    set_idt_gate(128, (uint32_t)isr128); // user mode 0x80
 
     set_idt(); // Load with ASM
 }
@@ -119,36 +120,45 @@ char *exception_messages[] = {
     "Reserved"
 };
 
-void isr_handler(registers_t *r) {
-	if (interrupt_handlers[r->int_no] != 0) {
+void user_handle(registers_t *r) {
+    printf("Hello from user mode program!\n");
+}
+
+static void ack_pic(int int_no) {
+    /* After every interrupt we need to send an EOI to the PICs
+     * or they will not send another interrupt again */
+    if (int_no >= 40) port_byte_out(0xA0, 0x20); /* slave */
+    port_byte_out(0x20, 0x20); /* master */    
+}
+
+void isr_handler(registers_t *r) {    
+    if (interrupt_handlers[r->int_no] != 0) {
         isr_t handler = interrupt_handlers[r->int_no];
         handler(r);
     } else {
-		kpanic("received interrupt: ");
-		char s[3];
-		itoa(r->int_no, s, sizeof(s));
-		kpanic(s);
-		kpanic("\n");
-		kpanic(exception_messages[r->int_no]);
-		kpanic("\n");
-	}
+        klog("received interrupt: ");
+        char s[3];
+        itoa(r->int_no, s, sizeof(s));
+        klog(s);
+        klog("\n");
+        klog(exception_messages[r->int_no]);
+        klog("\n");
+    }
 }
+
 
 void register_interrupt_handler(uint8_t n, isr_t handler) {
     interrupt_handlers[n] = handler;
 }
 
 void irq_handler(registers_t *r) {
-
     /* Handle the interrupt in a more modular way */
     if (interrupt_handlers[r->int_no] != 0) {
         isr_t handler = interrupt_handlers[r->int_no];
         handler(r);
     }
-    /* After every interrupt we need to send an EOI to the PICs
-     * or they will not send another interrupt again */
-    if (r->int_no >= 40) port_byte_out(0xA0, 0x20); /* slave */
-    port_byte_out(0x20, 0x20); /* master */
+
+    ack_pic(r->int_no);
 }
 
 void irq_install() {
@@ -157,4 +167,6 @@ void irq_install() {
     /* IRQ1: keyboard */
     init_keyboard();
     init_mouse();
+
+    register_interrupt_handler(0x80, user_handle);
 }

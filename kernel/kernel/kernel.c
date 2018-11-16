@@ -12,29 +12,32 @@
 #include <kernel/shell.h>
 #include <kernel/logger.h>
 #include <kernel/ps2mouse.h>
+#include <kernel/tty.h>
 #include <kernel/bitmap.h>
+
+extern void switch_to_user_mode();
+
+int FINISHED_INIT = 0;
 
 void kmain(uint32_t ebx) {	
 	struct multiboot_header *mbt = (struct multiboot_header*) ebx;
 	load_mmap(mbt);
-	print_mmap(mmap);
-	
 	gdt_init();
 	isr_install();
 	irq_install();
 	pmm_init(mmap.total_memory);
 	paging_init();
 	heap_init();
-	init_stdio(kmalloc_a(STDIO_SIZE));
-	graphics_init(mbt);
-	printf("CasteOSv2 kernel initialized. Beginning shell.\n");
+	init_stdio(kmalloc(STDIO_SIZE, 0));
+	vesa_graphics_init(mbt);
+	tty_init();
 
-	for(;;){
-	//	shell();
-		update_graphics();
-	}
+	FINISHED_INIT = 1;
+
+	print_mmap(mmap);
+	kprint("CasteOSv2 kernel initialized.\n");
+	kprint("Attempting to switch to user mode shell.\n");
+	switch_to_user_mode();
+	kprint("I shouldn't execute.");
 }
 
-void user_input(char *input) {
-	memcpy(stdin, input, strlen(input));
-}

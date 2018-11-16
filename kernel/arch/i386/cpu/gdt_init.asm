@@ -1,5 +1,6 @@
 [extern gdt_toc]
 [global gdt_load]
+[global tss_flush]
 
 gdt_load:
 	lgdt [gdt_toc]
@@ -14,3 +15,7 @@ gdt_load:
 update_registers:
 	ret
 	
+tss_flush:
+    mov ax, 0x2B
+    ltr ax
+	ret

@@ -1,6 +1,10 @@
 #ifndef GDT_H
 #define GDT_H
 
+#include <stdint.h>
+
+#define NUM_GDT_ENTRIES 6
+
 struct gdt {
 	unsigned short size;
 	unsigned int base;
@@ -16,5 +20,8 @@ struct gdt_entry {
 } __attribute__((packed));
 
 void gdt_init();
+
+extern uint32_t stack_bottom;
+extern uint32_t KERNEL_STACK_SIZE;
 
 #endif

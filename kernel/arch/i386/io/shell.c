@@ -9,26 +9,27 @@ int commands_history_index;
 int commands_history_operating_index = -1;
 
 void shell() {
+	while(1) {
+		printf("\n>");
 
-	printf(">");
+		char input_string[20];
+		getstr(input_string);
 
-	char input_string[20];
-	getstr(input_string);
+		int i = -1;//findCommand(input_string);
 
-	int i = -1;//findCommand(input_string);
+		if(i >= 0)
+		{
+		    void (*command_function)(void);
+			command_function = commands[i].func;
+			(*command_function)();
+			history[commands_history_index++] = commands[i];
 
-	if(i >= 0)
-	{
-	    void (*command_function)(void);
-		command_function = commands[i].func;
-		(*command_function)();
-		history[commands_history_index++] = commands[i];
-
-		commands_history_operating_index++;
-	}
-	else 
-	{
-		printf("Command not found...\n");
+			commands_history_operating_index++;
+		}
+		else 
+		{
+			printf("Command not found...\n");
+		}
 	}
 }
 

@@ -125,6 +125,7 @@ void page_fault(registers_t regs) {
 	if (rw) { kprint(" read-only"); klog(" read-only"); }
 	if (user) { kprint(" user-mode"); klog(" user-mode"); }
 	if (reserved) { kprint(" reserved"); klog(" reserved"); }
+	if (id) { kprint(" id"); klog(" id"); }
 	kprint(") at 0x");
 	klog(") at 0x");
 	khex(faulting_address);
@@ -133,18 +134,17 @@ void page_fault(registers_t regs) {
 	klog("\n");
 	kpanic("PAGE FAULT - STOPPING KERNEL\n");
 	
-	UNUSED(id);
 	for(;;) { asm volatile("hlt"); }
 }
 
 void* ksbrk(uint16_t size) { // TODO: Implement for size < 0
 	uint32_t old_heap_curr = heap_curr;
-	if(!size) return (void*) heap_curr;
+	if(!size) { klog("Trying to misuse ksbrk: size < 0\n"); return (void*) heap_curr; }
 	else if(size > 0) {
 		uint32_t new_boundary = heap_curr + size;
-		if(new_boundary <= heap_end) { heap_curr = new_boundary; return (void*) old_heap_curr; }
-		else if(new_boundary > heap_start + heap_max) return 0;
-		else if(new_boundary > heap_end) {
+		if(new_boundary < heap_end) { heap_curr = new_boundary; return (void*) old_heap_curr; }
+		else if(new_boundary >= heap_start + heap_max) { kpanic("KSBRK OUT OF SPACE\n"); return 0; }
+		else if(new_boundary >= heap_end) {
 			uint32_t runner = heap_end;
 			while(runner < new_boundary) {
 				map_virtual_address(page_directory, runner, 0);
@@ -152,7 +152,7 @@ void* ksbrk(uint16_t size) { // TODO: Implement for size < 0
 			} 
 			// potential bug check impl here: https://github.com/szhou42/osdev/blob/master/src/kernel/paging.c
 			heap_end = runner;
-			heap_curr = new_boundary;
+			heap_curr = new_boundary;			
 			return (void*) old_heap_curr;
 		}
 	}

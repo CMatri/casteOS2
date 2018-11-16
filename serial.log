@@ -1,3 +1,4 @@
+Kernel heap initialized at 0xC0563000
 ======= MEMORY MAP =======
 MEM: 2047 MB (0x7FFF0000 bytes)
 --------------------------
@@ -25,20 +26,3 @@ Base addr: FFFC00000
 Length: 040000
 Type: RESERVED
 ==========================
-Kernel heap initialized at 0xC057A000
-1000
-7E9000
-190
-4C
-465000
-18
-bitmap size: 41F3A
-bitmap offset: 8A
-bitmap is 12C x 12C x 24
-Graphics buffer: 0xC057C010
-Linear frame buffer location: 0xFD000000 (VIRT), 0xFD000000 (PHYS)
-Bytes per line: 7680
-Width: 1920
-Height: 1080
-buffer size 7E9000
-rwindow alloc at 0xC0D651B0

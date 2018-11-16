@@ -14,6 +14,7 @@ extern uint32_t kernel_physical_start;
 	
 mmap_data_t mmap;
 
+int FINISHED_INIT;
 void user_input(char *input);
 
 #endif
