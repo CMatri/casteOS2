@@ -10,8 +10,9 @@
 #include <kernel/logger.h>
 #include <kernel/screen.h>
 
-static page_directory_t* page_directory = 0;
+static page_directory_t* cur_page_directory = 0;
 static uint32_t page_dir_loc = 0;
+page_directory_t* kpage_dir = 0;
 int paging_enabled = 0;
 
 void flush_tlb() {
@@ -27,19 +28,45 @@ void* dumb_kmalloc_a(uint32_t size) {
 }
 
 page_directory_t* current_page_directory() {
-	return page_directory;
+	return cur_page_directory;
+}
+
+void copy_page_directory(page_directory_t* dst, page_directory_t* src) {
+    uint32_t i;
+    for(i = 0; i < 1024; i++) {
+        if(kpage_dir->ref_tables[i] == src->ref_tables[i]) {
+            // Link kernel pages
+            dst->tables[i] = src->tables[i];
+            dst->ref_tables[i] = src->ref_tables[i];
+        } else { // TODO:
+ /*           // For non-kernel pages, copy the pages (for example, when forking process, you don't want the parent process mess with child process's memory)
+            dst->ref_tables[i] = copy_page_table(src, dst, i, src->ref_tables[i]);
+            uint32_t phys = (uint32_t)virtual2phys(src, dst->ref_tables[i]);
+            dst->tables[i].frame = phys >> 12;
+            dst->tables[i].user = 1;
+            dst->tables[i].rw = 1;
+            dst->tables[i].present = 1;*/
+        }
+    }
 }
 
 void map_virtual_address_space(page_directory_t* dir, uint32_t vaddr, uint32_t paddr, uint32_t length) {
 	uint32_t loc = 0;
 	while(loc < length) {
-		map_virtual_address(dir, vaddr + loc, paddr + loc);
+		map_virtual_address(dir, vaddr + loc, paddr != 0xFFFFFFFF ? paddr + loc : -1);
 		loc += PAGE_SIZE;
 	}
 }
 
 void map_virtual_address(page_directory_t* dir, uint32_t vaddr, uint32_t paddr) {
-	if(vaddr % PAGE_SIZE != 0 || paddr % PAGE_SIZE != 0) kpanic("Mapping misaligned addresses\n");
+	if(vaddr % PAGE_SIZE != 0 || (paddr % PAGE_SIZE != 0 && paddr != 0xFFFFFFFF))  {
+		klog("Vaddr: 0x");
+		klhex(vaddr);
+		klog(" Paddr: 0x");
+		klhex(paddr);
+		kpanic("\nMapping misaligned addresses\n");
+	}
+
 	uint32_t pd_idx = (uint32_t) vaddr >> 22;
 	uint32_t pt_idx = (uint32_t) (vaddr >> 12) & 0x03FF;
 	
@@ -64,7 +91,7 @@ void map_virtual_address(page_directory_t* dir, uint32_t vaddr, uint32_t paddr) 
 	page_table_t* table = dir->ref_tables[pd_idx];
 	if(!table->pages[pt_idx].present) {
 		uint32_t addr = paddr;
-		if(!paddr) addr = allocate_block();
+		if(paddr == 0xFFFFFFFF) addr = allocate_block();
 		else set_block(addr);
 		table->pages[pt_idx].present = 1;
 		table->pages[pt_idx].rw = 1;
@@ -93,13 +120,14 @@ void paging_init() {
 
 	tmp_heap = (uint8_t*) PAGE_ALIGN((uint8_t*) (bitmap + bitmap_size));
 	tmp_heap_end = (uint8_t*) (tmp_heap + 1024 * 1024 * 4); // 4 MB for page frames
-	page_directory = (page_directory_t*) dumb_kmalloc_a(sizeof(page_directory_t));
-	page_dir_loc = (uint32_t) page_directory - BASE_VIRTUAL;
-	memset((uint8_t*) page_directory, 0, sizeof(page_directory_t));
+	kpage_dir = (page_directory_t*) dumb_kmalloc_a(sizeof(page_directory_t));
+	cur_page_directory = kpage_dir;
+	page_dir_loc = (uint32_t) kpage_dir - BASE_VIRTUAL;
+	memset((uint8_t*) kpage_dir, 0, sizeof(page_directory_t));
 	
 	uint32_t vaddr = BASE_VIRTUAL;
 	uint32_t paddr = 0;
-	for(; paddr < 32 * 1024 * 1024; paddr += PAGE_SIZE, vaddr += PAGE_SIZE) map_virtual_address(page_directory, vaddr, paddr); // map first 32 MB of memory, this is important. Also reserves space in the pmm for kernel and GRUB.
+	for(; paddr < 32 * 1024 * 1024; paddr += PAGE_SIZE, vaddr += PAGE_SIZE) map_virtual_address(kpage_dir, vaddr, paddr); // map first 32 MB of memory, this is important. Also reserves space in the pmm for kernel and GRUB.
 	
 	asm volatile("cli"); // disable interrupts before setting cr3 to page directory so IRQs and ISRs don't get messed up
 	load_page_dir(page_dir_loc);
@@ -147,7 +175,7 @@ void* ksbrk(uint16_t size) { // TODO: Implement for size < 0
 		else if(new_boundary >= heap_end) {
 			uint32_t runner = heap_end;
 			while(runner < new_boundary) {
-				map_virtual_address(page_directory, runner, 0);
+				map_virtual_address(kpage_dir, runner, -1);
 				runner += PAGE_SIZE;
 			} 
 			// potential bug check impl here: https://github.com/szhou42/osdev/blob/master/src/kernel/paging.c

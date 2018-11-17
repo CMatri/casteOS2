@@ -71,7 +71,6 @@ void tty_draw() {
 }
 
 void tty_init() {
-	tty_clear_screen();
 	tty_set_vbe_info(vesa_get_vbe_info());
 
 	// set up a default font

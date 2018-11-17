@@ -5,14 +5,12 @@
 
 #define MULTIBOOT_KERNEL_MAGIC      0x2BADB002
 #define MULTIBOOT_HEADER_MAGIC      0x1BADB002
-
 #define MULTIBOOT_MMAP_FREE_MEMORY  1
 #define MULTIBOOT_MMAP_RESERVED     2
 #define MULTIBOOT_MMAP_ACPI         3
 #define MULTIBOOT_MMAP_HIBERNATION  4
 #define MULTIBOOT_MMAP_BAD_CELL     5
-
-char* MULTIBOOT_MMAP_TYPES[6];
+#define MAX_MODULES                 10 // Temporary, maybe move module loading after heap init and store there if I need a more robust modules impl
 
 struct multiboot_header {
   uint32_t flags;
@@ -67,22 +65,36 @@ typedef struct {
 } __attribute__ ((packed)) vbe_info_t;
 
 typedef struct {
+   unsigned long mod_start;
+   unsigned long mod_end;
+   unsigned long string;
+   unsigned long reserved;
+} module_t;
+
+typedef struct {
    uint32_t size;
    uint32_t base_addr_low;
    uint32_t base_addr_high;
    //uint32_t length_low;
    //uint32_t length_high;
    uint64_t length;
-	uint32_t type;
+   uint32_t type;
 } __attribute__ ((packed)) mboot_memmap_t;
 
 typedef struct {
-	mboot_memmap_t* entries;
-	uint32_t length;
-	uint32_t total_memory;
+   mboot_memmap_t* entries;
+   uint32_t length;
+   uint32_t total_memory;
 } mmap_data_t;
 
-void load_mmap(struct multiboot_header *mbt);
+char* MULTIBOOT_MMAP_TYPES[6];
+module_t mods[MAX_MODULES];
+struct multiboot_header* mbt;
+
+void multiboot_init(struct multiboot_header *mbt);
+void load_mmap();
+void load_modules();
 void print_mmap();
+module_t* get_module(char* string);
 
 #endif

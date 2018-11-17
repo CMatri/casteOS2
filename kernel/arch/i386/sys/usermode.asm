@@ -1,7 +1,7 @@
 global switch_to_user_mode
-extern shell
 
 switch_to_user_mode:
+	mov ebx,[esp+4]
 	mov ax,0x23
 	mov ds,ax
 	mov es,ax 
@@ -13,7 +13,7 @@ switch_to_user_mode:
 	push eax ;push our current stack just for the heck of it
 	pushf
 	push 0x1B; ;user code segment with bottom 2 bits set for ring 3
-	push shell ;may need to remove the _ for this to work right 
+	push ebx ;may need to remove the _ for this to work right 
 	iret
 	pop ebp
 	ret

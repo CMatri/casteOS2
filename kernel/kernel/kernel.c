@@ -15,13 +15,13 @@
 #include <kernel/tty.h>
 #include <kernel/bitmap.h>
 
-extern void switch_to_user_mode();
+extern void switch_to_user_mode(void(*func)());
 
 int FINISHED_INIT = 0;
 
 void kmain(uint32_t ebx) {	
 	struct multiboot_header *mbt = (struct multiboot_header*) ebx;
-	load_mmap(mbt);
+	multiboot_init(mbt);
 	gdt_init();
 	isr_install();
 	irq_install();
@@ -34,10 +34,14 @@ void kmain(uint32_t ebx) {
 
 	FINISHED_INIT = 1;
 
-	print_mmap(mmap);
+//	print_mmap();
+	print_modules();
 	kprint("CasteOSv2 kernel initialized.\n");
 	kprint("Attempting to switch to user mode shell.\n");
-	switch_to_user_mode();
-	kprint("I shouldn't execute.");
+	//asm volatile("xchg %bx, %bx");
+	//create_process(0, PAGE_SIZE );
+	switch_to_user_mode(get_module("MYPROGRAM")->mod_start);
+
+	for(;;) {}
 }
 

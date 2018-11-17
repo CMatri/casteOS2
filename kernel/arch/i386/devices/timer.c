@@ -10,7 +10,11 @@ uint32_t tick = 0;
 
 static void timer_callback(registers_t *regs) {
 	tick++;
+	
+	#ifdef VESA_GRAPHICS 
 	if(tick % 2 == 0 && FINISHED_INIT) vesa_update_graphics(); // temporary lol
+	#endif
+	
 	UNUSED(regs);
 } 
 

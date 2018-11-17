@@ -9,6 +9,11 @@
 #define SET_PGBIT(cr0) (cr0 = cr0 | 0x80000000)
 #define CLEAR_PSEBIT(cr4) (cr4 = cr4 & 0xffffffef)
 #define PAGE_SIZE 0x1000
+#define TMP_PAGE_0               (void*) 0xFFBFB000
+#define TMP_PAGE_1               (void*) 0xFFBFC000
+#define TMP_PAGE_2               (void*) 0xFFBFC000
+#define TMP_PAGE_3               (void*) 0xFFBFC000
+#define TMP_PAGE_4               (void*) 0xFFBFF000
 
 typedef struct page_dir_entry {
     unsigned int present    : 1;
@@ -52,7 +57,9 @@ extern void load_page_directory(unsigned int*);
 extern void enable_paging();
 extern uint32_t BootPageDirectory;
 extern int paging_enabled;
+extern page_directory_t* kpage_dir;
 void paging_init();
+void copy_page_directory(page_directory_t* dst, page_directory_t* src);
 void page_fault(registers_t regs);
 void map_virtual_address(page_directory_t* dir, uint32_t vaddr, uint32_t paddr);
 void map_virtual_address_space(page_directory_t* dir, uint32_t vaddr, uint32_t paddr, uint32_t length);

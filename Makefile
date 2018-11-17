@@ -1,7 +1,7 @@
 GDB = /usr/local/i386elfgcc/bin/i386-elf-gdb
 
 run:
-	qemu.sh
+	./qemu.sh
 
 clean:
 	clean.sh
