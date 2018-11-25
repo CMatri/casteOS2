@@ -61,6 +61,7 @@ void load_mmap() {
 }
 
 void print_mmap() {
+	kprint("======= MEMORY MAP =======\n");
 	klog("======= MEMORY MAP =======\n");
 	kprint("MEM: ");
 	klog("MEM: ");
@@ -70,7 +71,7 @@ void print_mmap() {
 	klog(" MB (0x");
 	khex(mmap.total_memory);
 	klhex(mmap.total_memory);
-	kprint(" bytes)\n");	
+	kprint(" bytes)");	
 	klog(" bytes)");
 	uint32_t i = 0;
 	for(; i < mmap.length; i++) {
@@ -84,6 +85,16 @@ void print_mmap() {
 		klhex((uint32_t) m.length);
 		klog("\nType: ");
 		klog(MULTIBOOT_MMAP_TYPES[m.type]);
+		kprint("\n--------------------------\n");
+		kprint("Base addr: ");
+		khex(m.base_addr_low);
+		khex(m.base_addr_high);
+		kprint("\nLength: ");
+		khex((uint32_t) (m.length >> 32));
+		khex((uint32_t) m.length);
+		kprint("\nType: ");
+		kprint(MULTIBOOT_MMAP_TYPES[m.type]);
 	}
 	klog("\n==========================\n");
+	kprint("\n==========================\n");
 }

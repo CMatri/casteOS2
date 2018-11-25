@@ -38,6 +38,7 @@ stdio/portw.o \
 stdlib/abort.o \
 stdlib/itoa.o \
 stdlib/atoi.o \
+stdlib/syscall.o \
 string/memcmp.o \
 string/memcpy.o \
 string/memmove.o \

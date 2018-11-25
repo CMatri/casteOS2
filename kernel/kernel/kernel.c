@@ -14,8 +14,9 @@
 #include <kernel/ps2mouse.h>
 #include <kernel/tty.h>
 #include <kernel/bitmap.h>
-
-extern void switch_to_user_mode(void(*func)());
+#include <kernel/multiboot.h>
+#include <kernel/syscall.h>
+#include <kernel/initrd.h>
 
 int FINISHED_INIT = 0;
 
@@ -28,19 +29,20 @@ void kmain(uint32_t ebx) {
 	pmm_init(mmap.total_memory);
 	paging_init();
 	heap_init();
-	init_stdio(kmalloc(STDIO_SIZE, 0));
+	init_stdio();
 	vesa_graphics_init(mbt);
 	tty_init();
+	fs_root = initrd_init(get_module("initrd")->mod_start);
 
 	FINISHED_INIT = 1;
-
-//	print_mmap();
 	print_modules();
+	print_initrd();
 	kprint("CasteOSv2 kernel initialized.\n");
-	kprint("Attempting to switch to user mode shell.\n");
-	//asm volatile("xchg %bx, %bx");
-	//create_process(0, PAGE_SIZE );
-	switch_to_user_mode(get_module("MYPROGRAM")->mod_start);
+
+
+//	kprint("Attempting to switch to user mode shell.\n");
+//	module_t* m = get_module("init_user");
+//	create_process(m->mod_start, m->mod_end - m->mod_start);
 
 	for(;;) {}
 }

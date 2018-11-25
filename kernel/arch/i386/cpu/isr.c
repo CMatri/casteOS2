@@ -8,6 +8,7 @@
 #include <kernel/common.h>
 #include <kernel/timer.h>
 #include <kernel/ports.h>
+#include <kernel/syscall.h>
 
 isr_t interrupt_handlers[256];
 
@@ -46,6 +47,7 @@ void isr_install() {
     set_idt_gate(29, (uint32_t)isr29);
     set_idt_gate(30, (uint32_t)isr30);
     set_idt_gate(31, (uint32_t)isr31);
+    set_idt_gate(112, (uint32_t)isr112); // user mode 0x70
 
     // Remap the PIC
     port_byte_out(0x20, 0x11);
@@ -76,7 +78,6 @@ void isr_install() {
     set_idt_gate(45, (uint32_t)irq13);
     set_idt_gate(46, (uint32_t)irq14);
     set_idt_gate(47, (uint32_t)irq15);
-    set_idt_gate(128, (uint32_t)isr128); // user mode 0x80
 
     set_idt(); // Load with ASM
 }
@@ -120,10 +121,6 @@ char *exception_messages[] = {
     "Reserved"
 };
 
-void user_handle(registers_t *r) {
-    printf("Hello from user mode program!\n");
-}
-
 static void ack_pic(int int_no) {
     /* After every interrupt we need to send an EOI to the PICs
      * or they will not send another interrupt again */
@@ -132,7 +129,7 @@ static void ack_pic(int int_no) {
 }
 
 void isr_handler(registers_t *r) {    
-    if (interrupt_handlers[r->int_no] != 0) {
+    if (interrupt_handlers[r->int_no] != 0) {        
         isr_t handler = interrupt_handlers[r->int_no];
         handler(r);
     } else {
@@ -144,6 +141,8 @@ void isr_handler(registers_t *r) {
         klog(exception_messages[r->int_no]);
         klog("\n");
     }
+
+    ack_pic(r->int_no);
 }
 
 
@@ -162,11 +161,8 @@ void irq_handler(registers_t *r) {
 }
 
 void irq_install() {
-    /* IRQ0: timer */
     init_timer(50);
-    /* IRQ1: keyboard */
     init_keyboard();
     init_mouse();
-
-    register_interrupt_handler(0x80, user_handle);
+    init_syscall();
 }

@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <sys/syscall.h>
 
 #if defined(__is_myos_kernel)
 #include <kernel/screen.h>
@@ -10,7 +11,7 @@ int putchar(int ic)
 	char c = (char) ic;
 	kprint_char(c);
 #else
-	// TODO: You need to implement a write system call.
+	syscall(1, ic, 0, 0);
 #endif
 	return ic;
 }

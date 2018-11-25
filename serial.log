@@ -1,1 +1,2 @@
-Kernel heap initialized at 0xC0563000
+PAGE_DIR: 164000
+Kernel heap initialized at 0xC0564000

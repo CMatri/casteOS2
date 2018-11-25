@@ -2,7 +2,6 @@
 #define _STDIO_H 1
 
 #include <sys/cdefs.h>
-#include <stdint.h>
 
 #define STDIO_SIZE 4096
 
@@ -10,9 +9,10 @@
 extern "C" {
 #endif
 
-void* stdin;
+char stdin[STDIO_SIZE];
 volatile int in_size;
 
+void print(const char* data, short data_length);
 int printf(const char* __restrict, ...);
 int putchar(int);
 int puts(const char*);

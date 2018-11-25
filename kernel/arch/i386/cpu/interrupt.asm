@@ -93,7 +93,7 @@ global isr28
 global isr29
 global isr30
 global isr31
-global isr128
+global isr112
 ; IRQs
 global irq0
 global irq1
@@ -115,187 +115,187 @@ global irq15
 ; 0: Divide By Zero Exception
 isr0:
     push byte 0
-    push 0
+    push byte 0
     jmp isr_common_stub
 
 ; 1: Debug Exception
 isr1:
     push byte 0
-    push 1
+    push byte 1
     jmp isr_common_stub
 
 ; 2: Non Maskable Interrupt Exception
 isr2:
     push byte 0
-    push 2
+    push byte 2
     jmp isr_common_stub
 
 ; 3: Int 3 Exception
 isr3:
     push byte 0
-    push 3
+    push byte 3
     jmp isr_common_stub
 
 ; 4: INTO Exception
 isr4:
     push byte 0
-    push 4
+    push byte 4
     jmp isr_common_stub
 
 ; 5: Out of Bounds Exception
 isr5:
     push byte 0
-    push 5
+    push byte 5
     jmp isr_common_stub
 
 ; 6: Invalid Opcode Exception
 isr6:
     push byte 0
-    push 6
+    push byte 6
     jmp isr_common_stub
 
 ; 7: Coprocessor Not Available Exception
 isr7:
     push byte 0
-    push 7
+    push byte 7
     jmp isr_common_stub
 
 ; 8: Double Fault Exception (With Error Code!)
 isr8:
-    push 8
+    push byte 8
     jmp isr_common_stub
 
 ; 9: Coprocessor Segment Overrun Exception
 isr9:
     push byte 0
-    push 9
+    push byte 9
     jmp isr_common_stub
 
 ; 10: Bad TSS Exception (With Error Code!)
 isr10:
-    push 10
+    push byte 10
     jmp isr_common_stub
 
 ; 11: Segment Not Present Exception (With Error Code!)
 isr11:
-    push 11
+    push byte 11
     jmp isr_common_stub
 
 ; 12: Stack Fault Exception (With Error Code!)
 isr12:
-    push 12
+    push byte 12
     jmp isr_common_stub
 
 ; 13: General Protection Fault Exception (With Error Code!)
 isr13:
-    push 13
+    push byte 13
     jmp isr_common_stub
 
 ; 14: Page Fault Exception (With Error Code!)
 isr14:
-    push 14
+    push byte 14
     jmp isr_common_stub
 
 ; 15: Reserved Exception
 isr15:
     push byte 0
-    push 15
+    push byte 15
     jmp isr_common_stub
 
 ; 16: Floating Point Exception
 isr16:
     push byte 0
-    push 16
+    push byte 16
     jmp isr_common_stub
 
 ; 17: Alignment Check Exception
 isr17:
     push byte 0
-    push 17
+    push byte 17
     jmp isr_common_stub
 
 ; 18: Machine Check Exception
 isr18:
     push byte 0
-    push 18
+    push byte 18
     jmp isr_common_stub
 
 ; 19: Reserved
 isr19:
     push byte 0
-    push 19
+    push byte 19
     jmp isr_common_stub
 
 ; 20: Reserved
 isr20:
     push byte 0
-    push 20
+    push byte 20
     jmp isr_common_stub
 
 ; 21: Reserved
 isr21:
     push byte 0
-    push 21
+    push byte 21
     jmp isr_common_stub
 
 ; 22: Reserved
 isr22:
     push byte 0
-    push 22
+    push byte 22
     jmp isr_common_stub
 
 ; 23: Reserved
 isr23:
     push byte 0
-    push 23
+    push byte 23
     jmp isr_common_stub
 
 ; 24: Reserved
 isr24:
     push byte 0
-    push 24
+    push byte 24
     jmp isr_common_stub
 
 ; 25: Reserved
 isr25:
     push byte 0
-    push 25
+    push byte 25
     jmp isr_common_stub
 
 ; 26: Reserved
 isr26:
     push byte 0
-    push 26
+    push byte 26
     jmp isr_common_stub
 
 ; 27: Reserved
 isr27:
     push byte 0
-    push 27
+    push byte 27
     jmp isr_common_stub
 
 ; 28: Reserved
 isr28:
     push byte 0
-    push 28
+    push byte 28
     jmp isr_common_stub
 
 ; 29: Reserved
 isr29:
     push byte 0
-    push 29
+    push byte 29
     jmp isr_common_stub
 
 ; 30: Reserved
 isr30:
     push byte 0
-    push 30
+    push byte 30
     jmp isr_common_stub
 
 ; 31: Reserved
 isr31:
     push byte 0
-    push 31
+    push byte 31
     jmp isr_common_stub
 
 ; IRQ handlers
@@ -379,9 +379,9 @@ irq15:
     push byte 47
     jmp irq_common_stub
 
-isr128: 
-    ; 0x80, user interrupt
+isr112: 
+    ; 0x70, user interrupt
     push byte 0
-    push 128
-    jmp isr_common_stub
+    push byte 0x70
+    jmp irq_common_stub
 

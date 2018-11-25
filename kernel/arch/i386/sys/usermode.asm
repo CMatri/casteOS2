@@ -1,7 +1,8 @@
 global switch_to_user_mode
 
 switch_to_user_mode:
-	mov ebx,[esp+4]
+	mov ebx,[esp+8]
+	mov ecx,[esp+4]
 	mov ax,0x23
 	mov ds,ax
 	mov es,ax 
@@ -10,10 +11,11 @@ switch_to_user_mode:
 
 	mov eax,esp
 	push 0x23 ;user data segment with bottom 2 bits set for ring 3
-	push eax ;push our current stack just for the heck of it
+	push ebx ;push our current stack just for the heck of it
 	pushf
 	push 0x1B; ;user code segment with bottom 2 bits set for ring 3
-	push ebx ;may need to remove the _ for this to work right 
+	push ecx 
 	iret
-	pop ebp
-	ret
+	pop eax
+	pop eax
+	ret	

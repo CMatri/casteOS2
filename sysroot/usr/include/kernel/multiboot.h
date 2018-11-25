@@ -95,6 +95,7 @@ void multiboot_init(struct multiboot_header *mbt);
 void load_mmap();
 void load_modules();
 void print_mmap();
+void print_modules();
 module_t* get_module(char* string);
 
 #endif

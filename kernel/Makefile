@@ -29,7 +29,6 @@ LIBS:=$(LIBS) $(KERNEL_ARCH_LIBS)
 OBJS:=\
 $(KERNEL_ARCH_OBJS) \
 kernel/kernel.o \
-../userspace/test_user.o \
 
 CRTI_OBJ:=$(ARCHDIR)/misc/crti.o
 CRTBEGIN_OBJ:=$(shell $(CC) $(CFLAGS) $(LDFLAGS) -print-file-name=crtbegin.o)

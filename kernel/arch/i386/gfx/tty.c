@@ -17,7 +17,7 @@ void tty_set_vbe_info(vbe_info_t* i) {
 }
 
 void tty_write_char(char c) {
-	if(end_hist_idx >= HIST_LENGTH) return;
+	if(end_hist_idx >= HIST_LENGTH || !history) return;
 	history[end_hist_idx++] = c;
 }
 
@@ -52,7 +52,7 @@ void tty_draw() {
 	cur_foreground = 0xFFFFFFFF;
 	cur_background = 0;
 
-	for(i = disp_hist_idx; i < end_hist_idx; i++) {
+	for(i = disp_hist_idx; i < end_hist_idx && history; i++) {
 		char c = history[i];
 		if(c == '\n') {
 			cur_y++;
@@ -72,7 +72,6 @@ void tty_draw() {
 
 void tty_init() {
 	tty_set_vbe_info(vesa_get_vbe_info());
-
 	// set up a default font
 	//cur_font.data = &Terminess_Powerline_Bold;
 	cur_font.char_width = 8;

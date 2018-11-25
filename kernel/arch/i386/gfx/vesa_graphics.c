@@ -14,7 +14,7 @@ uint8_t* buffer;
 uint32_t buffer_size;
 int VBE_HD;
 struct wind_list **wm_handles;
-bitmap_img_t* bmp;
+bitmap_img_t* kickit;
 
 uint64_t wm_num_windows;
 struct wind_list* root_window;
@@ -125,13 +125,12 @@ void vesa_draw_bitmap_image(bitmap_img_t* bmp, uint16_t x, uint16_t y) {
 	uint8_t* bytes = bmp->image_bytes;
 	uint8_t* where = (uint8_t*) (buffer + x * pixel_width + y * bytes_per_line);
 	int i, j;
-
 	for(j = 1; j < bmp->height; j++) {
 		int cy = bmp->height - j;
 		for(i = 0; i < bmp->width; i++) {
-			where[i * 4] = bytes[cy * bmp->width * 3 + i * 3];
-			where[i * 4 + 1] = bytes[cy * bmp->width * 3 + i * 3 + 1];
-			where[i * 4 + 2] = bytes[cy * bmp->width * 3 + i * 3 + 2];
+			where[i * 4] = bytes[cy * bmp->width * 4 + i * 4];
+			where[i * 4 + 1] = bytes[cy * bmp->width * 4 + i * 4 + 1];
+			where[i * 4 + 2] = bytes[cy * bmp->width * 4 + i * 4 + 2];
 			where[i * 4 + 3] = 0x0;
 		}
 		where += bytes_per_line;
@@ -209,8 +208,9 @@ void vesa_update_graphics() {
 	vesa_clear_screen(0x0);
 	tty_draw();	
 	//repaint_children(root_window->handle);
-	//draw_bitmap_image(bmp, 200, 200);
+	//vesa_draw_bitmap_image(kickit, screen_width - kickit->width, screen_height - kickit->height);
 	draw_mouse(mouse_pos_x, mouse_pos_y);
+
 	while ((port_byte_in(0x3DA) & 0x08));
     while (!(port_byte_in(0x3DA) & 0x08));
 	memcpy(lfb, buffer, buffer_size);
@@ -230,7 +230,7 @@ void vesa_graphics_init(struct multiboot_header* mbt) {
 	wm_num_windows = 0;
 
 	buffer_size = (uint32_t) screen_width * screen_height * pixel_width;
-	map_virtual_address_space(current_page_directory(), (uint32_t) lfb, (uint32_t) lfb, buffer_size); // Identity map linear frame buffer
+	map_virtual_address_space(current_page_directory(), (uint32_t) lfb, (uint32_t) lfb, 1, buffer_size); // Identity map linear frame buffer
 	buffer = (uint8_t*) kmalloc(buffer_size, 0);
 
     //wm_handles = kmalloc(sizeof(struct wind_list*) * MAX_WINDOWS, 0);
@@ -242,7 +242,8 @@ void vesa_graphics_init(struct multiboot_header* mbt) {
 	//fill_rect(&root_window->wbmp, 0, 0, root_window->wbmp.width, root_window->wbmp.height, 0x00FF0000);
 	//fill_rect(&ch->wbmp, 0, 0, ch->wbmp.width, ch->wbmp.height, 0x0000FF00);
 
-	//bmp = load_bitmap((bitmap_img_t*) (&nasa_logo_bmp), nasa_logo_bmp_length);
+//	module_t* m = get_module("kickitwconnor");
+//	kickit = load_bitmap(m->mod_start, m->mod_end - m->mod_start);
 
 	memset(buffer, 0x0, buffer_size);
 }

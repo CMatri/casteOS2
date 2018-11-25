@@ -15,7 +15,7 @@ void shell() {
 		char input_string[20];
 		getstr(input_string);
 
-		int i = -1;//findCommand(input_string);
+		int i = -1; //findCommand(input_string);
 
 		if(i >= 0)
 		{

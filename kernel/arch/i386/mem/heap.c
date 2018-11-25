@@ -18,9 +18,9 @@ heap_meta_t* get_free_block(uint16_t size) {
 }
 
 void* kmalloc(uint32_t size, int align) {
-	uint32_t total_size = total_size = sizeof(heap_meta_t) + size;
+	uint32_t total_size = sizeof(heap_meta_t) + size;
 	if (align) {
-		heap_curr = PAGE_ALIGN(heap_curr);
+		heap_curr = PAGE_ALIGN(heap_curr)-0x8; // this probably will cause problems, I do it because it page aligns the user mode page dir TODO: completely rewrite heap allocator
 	}
 	void* block;
 	heap_meta_t *header;
@@ -49,11 +49,18 @@ void* kmalloc_a(uint32_t size) {
 }
 
 void heap_init() {
-	heap_curr = PAGE_ALIGN((uint32_t) (tmp_heap_end)); // kernel heap located 8 MB after kernel.
+	heap_curr = PAGE_ALIGN((uint32_t) (tmp_heap_end));
 	heap_start = heap_curr;
 	heap_end = heap_start;
 	heap_max = 32 * 1024 * 1024;
+
+	while(heap_end < heap_start + heap_max) {
+		map_virtual_address(kpage_dir, heap_end, -1, 1);
+		heap_end += PAGE_SIZE;
+	} 
+	
 	kheap_enabled = 1;
+	
 	kprint("Kernel heap initialized at 0x");
 	khex(heap_start);
 	kprint("\n");

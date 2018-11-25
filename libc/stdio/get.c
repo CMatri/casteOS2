@@ -11,14 +11,14 @@ int getch()
 {
 	for(;;)
 	{
-		if(((uint8_t*)stdin)[in_size] != 0)
+		if(((char*)stdin)[in_size] != 0)
 		{
 			in_size++;
 			break;
 		}
 	}
 
-	return ((uint8_t*)stdin)[in_size-1];
+	return ((char*)stdin)[in_size-1];
 }
 
 char* getstr(char *str)

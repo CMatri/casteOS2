@@ -15,18 +15,22 @@
 #define TMP_PAGE_3               (void*) 0xFFBFC000
 #define TMP_PAGE_4               (void*) 0xFFBFF000
 
-typedef struct page_dir_entry {
-    unsigned int present    : 1;
-    unsigned int rw         : 1;
-    unsigned int user       : 1;
-    unsigned int w_through  : 1;
-    unsigned int cache      : 1;
-    unsigned int access     : 1;
-    unsigned int reserved   : 1;
-    unsigned int page_size  : 1;
-    unsigned int global     : 1;
-    unsigned int available  : 3;
-    unsigned int frame      : 20;
+typedef union page_dir_entry {
+    struct {
+        unsigned int present    : 1;
+        unsigned int rw         : 1;
+        unsigned int user       : 1;
+        unsigned int w_through  : 1;
+        unsigned int cache      : 1;
+        unsigned int access     : 1;
+        unsigned int reserved   : 1;
+        unsigned int page_size  : 1;
+        unsigned int global     : 1;
+        unsigned int available  : 3;
+        unsigned int frame      : 20;
+    };
+
+    uint32_t rep;
 } page_dir_entry_t;
 
 typedef struct page_table_entry {
@@ -59,10 +63,14 @@ extern uint32_t BootPageDirectory;
 extern int paging_enabled;
 extern page_directory_t* kpage_dir;
 void paging_init();
+uint32_t virtual2phys(page_directory_t* dir, uint32_t virtual_addr);
+void log_page_directory(page_directory_t* dir, int tables);
 void copy_page_directory(page_directory_t* dst, page_directory_t* src);
+page_table_t* copy_page_table(page_directory_t* src_page_dir, page_directory_t* dst_page_dir, uint32_t page_dir_idx, page_table_t* src);
+void free_page(page_directory_t* dir, uint32_t virtual_addr, int free);
 void page_fault(registers_t regs);
-void map_virtual_address(page_directory_t* dir, uint32_t vaddr, uint32_t paddr);
-void map_virtual_address_space(page_directory_t* dir, uint32_t vaddr, uint32_t paddr, uint32_t length);
+void map_virtual_address(page_directory_t* dir, uint32_t vaddr, uint32_t paddr, int u);
+void map_virtual_address_space(page_directory_t* dir, uint32_t vaddr, uint32_t paddr, int u, uint32_t length);
 void* ksbrk(uint16_t size);
 page_directory_t* current_page_directory();  
 uint8_t* tmp_heap;
