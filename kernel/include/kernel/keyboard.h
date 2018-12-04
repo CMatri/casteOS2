@@ -5,11 +5,12 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#define KB_BUF_SIZE 20
+#define KB_BUF_SIZE 256
 #define MAX_HOOKS 100
 
 void init_keyboard();
 void keyboard_handler(registers_t *regs);
+unsigned int keyboard_get_key();
 
 enum kbOpts
 {

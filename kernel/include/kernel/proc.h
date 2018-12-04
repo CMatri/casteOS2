@@ -6,11 +6,12 @@
 
 typedef struct process {
 	uint32_t pid;
+	registers_t regs;
 	struct process* next;
 	page_directory_t* page_dir;
 } process_t;
 
-void task_switch();
+volatile void switch_task(registers_t *regs);
 void create_process(uint8_t* code, uint32_t code_length);
 
 #endif

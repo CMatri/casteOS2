@@ -1,6 +1,6 @@
 #!/bin/sh
 SYSTEM_HEADER_PROJECTS="kernel"
-PROJECTS="libc kernel userspace"
+PROJECTS="libc kernel userspace initrd"
 
 export MAKE=${MAKE:-make}
 export HOST=${HOST:-$(./default-host.sh)}

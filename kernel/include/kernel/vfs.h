@@ -43,8 +43,6 @@ typedef struct {
 	struct fs_node *ptr;	// Used by mountpoints and symlinks.
 } fs_node_t;
 
-
-
 extern fs_node_t *fs_root; // The root of the filesystem.
 
 // Standard read/write/open/close functions. Note that these are all suffixed with

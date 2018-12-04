@@ -112,6 +112,15 @@ void read_kb_buf(uint8_t *buf, uint16_t size) {
 	((uint8_t*) stdin)[in_size] = kb_buf[size - 1];
 }
 
+unsigned int keyboard_get_key() {
+	unsigned int c = kb_buf[0];
+	int i;
+	if(last == 0) return 0;
+	last--;
+	for(i = 0; i < KB_BUF_SIZE - 1; i++) kb_buf[i] = kb_buf[i + 1];
+	return c;
+}
+
 void keyboard_handler(registers_t *regs) {
 	unsigned char scancode = inportb(0x60);
 
@@ -167,7 +176,7 @@ void keyboard_handler(registers_t *regs) {
 			read_kb_buf(kb_buf, last);
 		}
 
-		if(last == KB_BUF_SIZE) last = 0;
+		if(last >= KB_BUF_SIZE) last = 0;
 	}
 
 	UNUSED(regs);

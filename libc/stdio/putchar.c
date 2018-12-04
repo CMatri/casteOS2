@@ -11,7 +11,7 @@ int putchar(int ic)
 	char c = (char) ic;
 	kprint_char(c);
 #else
-	syscall(1, ic, 0, 0);
+	syscall(4, ic, 0, 0);
 #endif
 	return ic;
 }

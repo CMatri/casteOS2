@@ -22,6 +22,7 @@ int FINISHED_INIT = 0;
 
 void kmain(uint32_t ebx) {	
 	struct multiboot_header *mbt = (struct multiboot_header*) ebx;
+
 	multiboot_init(mbt);
 	gdt_init();
 	isr_install();
@@ -35,15 +36,16 @@ void kmain(uint32_t ebx) {
 	fs_root = initrd_init(get_module("initrd")->mod_start);
 
 	FINISHED_INIT = 1;
+
 	print_modules();
 	print_initrd();
 	kprint("CasteOSv2 kernel initialized.\n");
 
-
-//	kprint("Attempting to switch to user mode shell.\n");
-//	module_t* m = get_module("init_user");
-//	create_process(m->mod_start, m->mod_end - m->mod_start);
-
+	//kprint("Attempting to switch to user mode shell.\n");
+	//module_t* m = get_module("init_user");
+	//create_process(m->mod_start, m->mod_end - m->mod_start);
+	//shell();	
+	tasking_init();
 	for(;;) {}
 }
 

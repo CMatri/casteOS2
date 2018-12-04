@@ -15,6 +15,8 @@ static void timer_callback(registers_t *regs) {
 	if(tick % 2 == 0 && FINISHED_INIT) vesa_update_graphics(); // temporary lol
 	#endif
 	
+	switch_task(regs);
+
 	UNUSED(regs);
 } 
 

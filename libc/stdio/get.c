@@ -1,4 +1,7 @@
 #include <stdio.h>
+#if defined(__is_myos_kernel)
+#include <kernel/keyboard.h>
+#endif
 
 int getchar()
 {
@@ -9,16 +12,15 @@ int getchar()
 
 int getch()
 {
-	for(;;)
-	{
-		if(((char*)stdin)[in_size] != 0)
-		{
-			in_size++;
-			break;
-		}
-	}
-
-	return ((char*)stdin)[in_size-1];
+#if defined(__is_myos_kernel)
+	char c = 0;
+	while(!(c = keyboard_get_key()));
+	return c;
+#else
+	char c = 0;
+	while(!(c = syscall(3, 0, 0, 0)));
+	return c;
+#endif
 }
 
 char* getstr(char *str)

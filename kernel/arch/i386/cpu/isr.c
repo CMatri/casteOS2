@@ -141,8 +141,6 @@ void isr_handler(registers_t *r) {
         klog(exception_messages[r->int_no]);
         klog("\n");
     }
-
-    ack_pic(r->int_no);
 }
 
 

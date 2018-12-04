@@ -17,7 +17,6 @@ isr_common_stub:
     ; 2. Call C handler
     cld ; C code following the sysV ABI requires DF to be clear on function entry
 	call isr_handler
-	
     ; 3. Restore state
 	pop eax 
     pop eax
@@ -383,5 +382,5 @@ isr112:
     ; 0x70, user interrupt
     push byte 0
     push byte 0x70
-    jmp irq_common_stub
+    jmp isr_common_stub
 
