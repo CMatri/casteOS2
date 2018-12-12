@@ -40,6 +40,7 @@ void kmain(uint32_t ebx) {
 	print_modules();
 	print_initrd();
 	kprint("CasteOSv2 kernel initialized.\n");
+	asm volatile("xchg %bx, %bx");
 
 	//kprint("Attempting to switch to user mode shell.\n");
 	//module_t* m = get_module("init_user");

@@ -159,7 +159,7 @@ void irq_handler(registers_t *r) {
 }
 
 void irq_install() {
-    init_timer(50);
+    init_timer(100);
     init_keyboard();
     init_mouse();
     init_syscall();

@@ -10,7 +10,7 @@ process_t* cur_proc;
 int cur_pid = 0;
 
 void idle_thread() {
-	while(1) klog("I'm an idle thread lol");
+	klog("I'm an idle thread lol");
 }
 
 void test_thread0() {
@@ -28,11 +28,13 @@ volatile void switch_task(registers_t *regs) {
 	
 	memcpy(regs, &cur_proc->regs, sizeof(registers_t));
 	load_page_dir(virtual2phys(kpage_dir, cur_proc->page_dir));
+
+	switch_kernel_task(cur_proc->regs.eip, cur_proc->regs.esp);
 }
 
 void tasking_init() {
-	create_process(idle_thread, PAGE_SIZE);
-	create_process(test_thread0, PAGE_SIZE);
+	create_process(&idle_thread, PAGE_SIZE);
+	//create_process(test_thread0, PAGE_SIZE);
 }
 
 void create_process(uint8_t* code, uint32_t code_length) {
@@ -55,7 +57,7 @@ void create_process(uint8_t* code, uint32_t code_length) {
 	map_virtual_address(proc->page_dir, PAGE_ALIGN(code_length), -1, 1); 	// stack
 	load_page_dir(virtual2phys(kpage_dir, proc->page_dir));
 	memcpy(0x0, code, code_length);
-	load_page_dir(virtual2phys(kpage_dir, kpage_dir));
-	//switch_kernel_task(0x0, PAGE_ALIGN(code_length));
+	
+	//load_page_dir(virtual2phys(kpage_dir, kpage_dir));
 	//switch_to_user_mode(0x0, PAGE_ALIGN(code_length));
 }
